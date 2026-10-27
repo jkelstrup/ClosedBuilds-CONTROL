@@ -32,7 +32,9 @@ app/jog/index.html (mobile jog)
 
 HTTP initially uses `WEB_PORT` or the fallback list in `config.webPorts`; `httpServerError` retries through `config.nextWebPort`. HTTP explicitly binds `0.0.0.0`. HTTPS has no explicit host restriction. Both carry the same Socket.IO server. Express serves `app/` as its static root, so `/` loads the full UI, `/jog/` loads mobile jog, and `/socket.io/socket.io.js` comes from Socket.IO.
 
-Electron `ready` handlers create the tray/menu and show the window on macOS/Linux; Windows normally starts in the tray and enables login startup. `createJogWindow` loads the local HTTP origin, with `nodeIntegration: true` and `contextIsolation: false`. Window controls route back through socket events. Exit handlers terminate the app; cleanup of machine timers/connections is not represented by a single session lifecycle.
+Electron `ready` handlers create the tray/menu and show the window on macOS/Linux; Windows normally starts in the tray and enables login startup. `createJogWindow` loads the local HTTP origin, with `nodeIntegration: true` and `contextIsolation: false`. The desktop uses native OS window controls; legacy window-control socket listeners remain available. Exit handlers terminate the app; cleanup of machine timers/connections is not represented by a single session lifecycle.
+
+`npm run dev` uses the compiled `scripts/dev.ts` launcher and `scripts/dev-session.ts` watcher to reload the desktop renderer for frontend edits or quit/restart Electron for main-process edits. A guarded development-only IPC hook in `index.js` accepts these messages. Normal startup has no watcher or development IPC handler; see [development reloads](development.md#automatic-development-reloads) for scope and state-loss behavior.
 
 There are `isElectron()` and Raspberry Pi/Chrome branches, but Electron is required and used earlier without a complete non-Electron startup seam. Treat plain `node index.js` support as unverified, not a documented alternative launch command.
 

@@ -2,9 +2,9 @@
 
 ## Current setup status
 
-The repository is an independently maintained continuation, but application identity and release infrastructure still use inherited OpenBuilds values. [PLAN.md](../PLAN.md) separates mapping from toolchain modernization; [architecture.md](architecture.md) describes what actually starts today.
+The repository is an independently maintained continuation named CBC; internal identifiers and release infrastructure still use inherited OpenBuilds values. [PLAN.md](../PLAN.md) separates mapping from toolchain modernization; [architecture.md](architecture.md) describes what actually starts today. User-facing changes are recorded in [CHANGELOG.txt](../CHANGELOG.txt), above the retained upstream history.
 
-- `npm run dev` launches `electron .`; `npm start` and `npm run run-local` retain equivalent desktop entry points. None of the verification commands launch CONTROL.
+- `npm run dev` builds the TypeScript tooling and launches Electron with automatic reload/restart (see below). `npm start` and `npm run run-local` launch `electron .` without watchers. None of the verification commands launch CONTROL.
 - Use Node **24.22.1** (`nvm use`, using `.nvmrc`) and npm **11.19.1**, also declared in `package.json`. Install with `npm ci` from the checked-in lockfile. Its `postinstall` runs `electron-builder install-app-deps` and may download/rebuild native dependencies. Do not use `--ignore-scripts` for a complete installation.
 - Run `npm run verify:install` after installing. This loads serialport's native binding and checks split-line framing in host Node and in Electron's Node mode. It never imports the application, enumerates/opens ports, or starts servers/windows/updaters. This is an installation check, not an application behavior suite.
 - The first verified combination is macOS arm64, Node 24.22.1/npm 11.19.1, Electron **23.3.13** (embedded Node 18.12.1), serialport **12.0.0**, and native bindings **12.0.1**. The native package uses Node-API; loading under both runtimes passed. A limited launch/browser UI smoke check also passed; native source compilation, other platforms, full desktop workflows, and packaging remain unverified.
@@ -16,9 +16,21 @@ Do not launch the app merely to inspect architecture: startup opens network list
 
 ## Incremental TypeScript and local checks
 
+### Automatic development reloads
+
+Run `npm run dev` on a controller-free development machine. Edits under `app/` to HTML, CSS, JavaScript, JSON, images, and fonts reload the desktop window without restarting the shared server. This is a full page reload, not state-preserving HMR: unsaved editor contents and in-memory renderer state are lost. Standalone browser/mobile clients need a manual refresh.
+
+Edits to `index.js`, `grblStrings.js`, `package.json`, or `dev-app-update.yml` quit and restart Electron, including its servers and machine state. Saves are debounced; a main-process restart takes priority over a renderer reload. Generated output, dependencies, documentation, and temporary editor files do not trigger reloads. Restart `npm run dev` manually after editing the development tooling itself or installing dependencies.
+
+Ctrl+C stops the watcher and Electron. Quitting the app also stops the watcher. The launcher uses a private process IPC channel and `CONTROL_DEV_RELOAD=1`; the app accepts reload/quit messages only when unpackaged and launched with both. Normal startup and packaged apps do not enable this hook. The executable still launches with `electron .`, preserving application identity, profile, and origin. No reload endpoint or additional network listener is added.
+
+Forward Electron flags with `npm run dev -- --user-data-dir=<temporary-profile>`. The launcher uses Node's recursive filesystem watcher; the pinned Node 24 host is required. Windows/Linux runtime behavior remains unverified.
+
+### Verification commands
+
 | Command | Current scope |
 | --- | --- |
-| `npm test` | Vitest in plain Node; toolchain compatibility/failure tests only |
+| `npm test` | Vitest in plain Node; toolchain, development watcher, and branding tests without application startup |
 | `npm run typecheck` | Strict TypeScript for `scripts/**/*.ts`, `tests/toolchain/**/*.ts`, and `vitest.config.mts` |
 | `npm run lint` | Type-aware ESLint for the same migrated TypeScript scope; warnings fail |
 | `npm run format:check` | Prettier for migrated scripts/tests, toolchain config, and `package.json` |
@@ -28,7 +40,7 @@ Do not launch the app merely to inspect architecture: startup opens network list
 
 TypeScript 5.9.3 is deliberately below the type-aware ESLint plugin's `<6.1` support ceiling. Tool versions are exact-pinned in `package.json` and the npm lock. The compiler uses `NodeNext` resolution/output and an ES2022 target; with this package's unchanged CommonJS identity, ordinary `.ts` modules emit CommonJS `.js`. `.mts` is reserved for ESM tooling configuration. `strict`, unchecked index access, and exact optional-property checks are enabled. Third-party declaration internals use `skipLibCheck`; application/tooling source is still checked. Node types target the host toolchain; code executed in Electron's embedded Node must also stay compatible with Node 18, as the installation smoke check verifies for its current imports.
 
-`scripts/verify-install.ts` emits to `dist/checks/scripts/verify-install.js`; TypeScript copies its imported package manifest to `dist/checks/package.json`. The source is not executed directly. Existing CommonJS callers can use `require()` on emitted CommonJS modules after building; the toolchain suite exercises this with a temporary fixture. No legacy application entry point currently imports the generated output.
+`scripts/verify-install.ts` emits to `dist/checks/scripts/verify-install.js`; TypeScript copies its imported package manifest to `dist/checks/package.json`. The source is not executed directly. Existing CommonJS callers can use `require()` on emitted CommonJS modules after building; the toolchain suite exercises this with a temporary fixture. The development launcher likewise runs compiled tooling; the legacy application does not import generated output.
 
 ### Checked scope and migration exclusions
 
@@ -72,7 +84,8 @@ Classification is based on code/header inspection and runtime references, not a 
 | `notarize.js`, `signWin.js`, `.github/workflows/`, `.travis.yml`, `appveyor.yml`, `pi-install.sh`, `pi-shortcut.desktop` | Inherited build/release/install automation | Keep separate from ordinary verification; active platform support is not established |
 | `BACKUPS OF MACROS FROM FORUM/`, `app/sample-macros/` | Historical compatibility examples / maintained samples | Samples demonstrate executable macro dependencies; historical examples are not loaded as application source |
 | `app/wizards/flashingtool/`, `app/wizards/mailinglist_unused/`, root `todo`, backup-named assets | Historical/inactive candidates | Main HTML comments out old flasher; registration not loaded there. References and licensing must be checked before removal |
-| `docs/` screenshots, `CHANGELOG.txt`, `api.doc` | Historical documentation/data | Screenshots/changelog reflect upstream; `api.doc` is not an executable/current contract |
+| `CHANGELOG.txt` | Maintained release notes with retained upstream history | Add CBC changes at the top; preserve historical entries |
+| `docs/` screenshots, `api.doc` | Historical documentation/data | Screenshots reflect upstream; `api.doc` is not an executable/current contract |
 | `dist/`, `node_modules/`, runtime upload data | Build/install/runtime output | Ignored; not maintained source. Do not confuse root firmware binaries with replaceable build output |
 
 For ordinary application searches, start with `index.js`, `grblStrings.js`, `app/js/`, `app/wizards/`, `app/jog/`, `app/index.html`, `app/lib/3dview/`, and the CNC mode. Expand into vendor candidates when investigating library integration. This deliberately includes maintained code under `lib` rather than blanket-excluding the directory.
@@ -85,7 +98,7 @@ Flashing code rewrites `app.asar` to `app.asar.unpacked` for tools, bootloaders,
 
 ## Independent-project configuration to migrate
 
-No identities, endpoints, signing credentials, or stored data are changed in this baseline.
+The visible product name is **CBC** (`package.json` productName, Electron name, desktop/mobile titles, and app messages). The splash uses `app/img/CBC.svg`, supplied by the maintainer. Electron explicitly retains the `OpenBuildsCONTROL` directory under `appData` for both `userData` and `sessionData`, preserving existing uploads and browser storage; an explicit `--user-data-dir` override still takes precedence. Package name, appId, Windows AppUserModelId, origins, upstream links, attribution, signing configuration, and update endpoints remain unchanged. The supplied SVG is not yet used for packaged application/tray icons. Packaged branding remains unverified.
 
 | Concern | Current sources | Migration constraint |
 | --- | --- | --- |

@@ -2,7 +2,7 @@
 
 ## Current evidence
 
-The milestone-1 baseline is documentation from source inspection. Milestone 2 now has locked installation/native loading, a limited launch/browser UI smoke check, and real tooling checks (below). Full desktop/browser workflows, packaging, controller connection, movement, and flashing remain unverified. `npm test` now runs deterministic toolchain tests; there is no machine behavior suite or controller simulator yet. `npm start` now launches the app, rather than acting as a verification placeholder.
+The milestone-1 baseline is documentation from source inspection. Milestone 2 now has locked installation/native loading, a limited launch/browser UI smoke check, and real tooling checks (below). Full desktop/browser workflows, packaging, controller connection, movement, and flashing remain unverified. `npm test` now runs toolchain and development-watcher tests; there is no machine behavior suite or controller simulator yet. `npm start` now launches the app, rather than acting as a verification placeholder.
 
 For documentation changes, use `git diff --check`, verify relative links against files, and cross-check named symbols, events, routes, and keys against source. These checks establish documentation consistency, not application correctness. Milestone 2 is establishing reproducible installation and real checks; milestone 3 adds controller-free machine verification.
 
@@ -32,6 +32,14 @@ Evidence recorded in the `build/typescript-checks` working branch, on macOS arm6
 - `npm ci` and `npm ls --depth=0`: passed with the updated lockfile; the same 16 inherited audit findings remain. After checks, `npm run dev -- --user-data-dir=<temporary-profile>` started successfully, HTTP on port 3000 returned 200, and the user confirmed the app appeared to work. This is a limited startup smoke check, not machine or full desktop workflow verification.
 
 See [commands, output format, and exclusions](development.md#incremental-typescript-and-local-checks) before selecting checks. These results are tooling evidence only, not controller/application characterization. Playwright, renderer/worker builds, CI execution/failure probes, packaging, and the broader platform matrix remain pending.
+
+## CBC 0.1.0 development checks
+
+Evidence recorded with the CBC 0.1.0 changes, macOS arm64, Node 24.22.1/npm 11.19.1, Electron 23.3.13, no controllers. User-facing changes are listed in [CHANGELOG.txt](../CHANGELOG.txt); watcher usage and storage compatibility are documented in [development.md](development.md).
+
+- `npm run check` passes all 18 tests, covering tooling, watcher reload/restart priority and cleanup, development IPC guards, dynamic CBC titles, and default/overridden profile paths. Tests do not import the application entry point.
+- Native `npm run dev` smoke checks: frontend edits send reload requests without replacing Electron; main edits restart it; SIGTERM stops the launcher and Electron. HTTP serves the CBC title and supplied SVG, and `/api/version` reports `0.1.0`.
+- Remaining gaps: native visual workflows, existing-data round trips, Windows/Linux runtime behavior, and packaging. Reloads discard unsaved renderer state; these checks do not establish machine behavior or state-preserving HMR.
 
 ## Scenario selection for future implementation
 

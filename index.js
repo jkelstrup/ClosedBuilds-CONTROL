@@ -44,7 +44,7 @@ function debug_log() {
   }
 } // end Debug Logger
 
-debug_log("Starting OpenBuilds CONTROL v" + require('./package').version)
+debug_log("Starting CBC v" + require('./package').version)
 
 var config = {};
 config.webPorts = [3000, 3020, 3200, 3220]
@@ -185,6 +185,26 @@ var lastsentuploadprogress = 0;
 // Electron app
 const electron = require('electron');
 const electronApp = electron.app;
+
+// Keep the existing profile even though the visible product name is now CBC.
+const profilePath = electronApp.commandLine.hasSwitch('user-data-dir')
+  ? electronApp.getPath('userData')
+  : path.join(electronApp.getPath('appData'), 'OpenBuildsCONTROL');
+fs.mkdirSync(profilePath, { recursive: true });
+electronApp.setPath('userData', profilePath);
+electronApp.setPath('sessionData', profilePath);
+electronApp.setName('CBC');
+
+// Only the development launcher supplies both this flag and a private IPC channel.
+if (!electronApp.isPackaged && process.env.CONTROL_DEV_RELOAD === '1' && process.send) {
+  process.on('message', function(message) {
+    if (message && message.type === 'control:reload' && jogWindow && !jogWindow.isDestroyed()) {
+      jogWindow.webContents.reloadIgnoringCache();
+    } else if (message && message.type === 'control:quit') {
+      electronApp.quit();
+    }
+  });
+}
 
 electronApp.setAppUserModelId("openbuilds.control")
 
@@ -562,7 +582,7 @@ app.get('/activate', (req, res) => {
   debug_log(req.hostname)
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  res.send('Host: ' + req.hostname + ' asked to activate OpenBuilds CONTROL v' + require('./package').version);
+  res.send('Host: ' + req.hostname + ' asked to activate CBC v' + require('./package').version);
   showJogWindow()
   setTimeout(function() {
     io.sockets.emit('activate', req.hostname);
@@ -809,7 +829,7 @@ io.on("connection", function(socket) {
       center: true,
       resizable: true,
       maximizable: true,
-      title: "OpenBuilds CONTROL: Chromium's GPU Report",
+      title: "CBC: Chromium's GPU Report",
       frame: true,
       autoHideMenuBar: true,
       //icon: '/app/favicon.png',
@@ -2551,7 +2571,7 @@ function parseFeedback(data) {
         pause();
         var output = {
           'command': '[external from hardware]',
-          'response': "OpenBuilds CONTROL received a FEEDHOLD notification from Grbl: This could be due to someone pressing the HOLD button (if connected)",
+          'response': "CBC received a FEEDHOLD notification from Grbl: This could be due to someone pressing the HOLD button (if connected)",
           'type': 'info'
         }
         io.sockets.emit('data', output);
@@ -2567,7 +2587,7 @@ function parseFeedback(data) {
         stop(true);
         var output = {
           'command': '[external from hardware]',
-          'response': "OpenBuilds CONTROL received a RESET/ABORT notification from Grbl: This could be due to someone pressing the RESET/ABORT button (if connected)",
+          'response': "CBC received a RESET/ABORT notification from Grbl: This could be due to someone pressing the RESET/ABORT button (if connected)",
           'type': 'info'
         }
         io.sockets.emit('data', output);
@@ -2578,7 +2598,7 @@ function parseFeedback(data) {
         unpause();
         var output = {
           'command': '[external from hardware]',
-          'response': "OpenBuilds CONTROL received a CYCLESTART/RESUME notification from Grbl: This could be due to someone pressing the CYCLESTART/RESUME button (if connected)",
+          'response': "CBC received a CYCLESTART/RESUME notification from Grbl: This could be due to someone pressing the CYCLESTART/RESUME button (if connected)",
           'type': 'info'
         }
         io.sockets.emit('data', output);
@@ -3101,7 +3121,7 @@ if (isElectron()) {
             showJogWindow()
           }
         }, {
-          label: 'Quit OpenBuilds CONTROL (Disables all integration until started again)',
+          label: 'Quit CBC (Disables all integration until started again)',
           click() {
             if (appIcon) {
               appIcon.destroy();
@@ -3131,14 +3151,13 @@ if (isElectron()) {
         if (appIcon) {
           appIcon.displayBalloon({
             icon: nativeImage.createFromPath(iconPath),
-            title: "OpenBuilds CONTROL Started",
-            // content: "OpenBuilds CONTROL has started successfully: Active on " + ip.address() + ":" + config.webPort
-            content: "OpenBuilds CONTROL has started successfully"
+            title: "CBC Started",
+            content: "CBC has started successfully"
           })
         }
       } else {
         const dockMenu = Menu.buildFromTemplate([{
-          label: 'Quit OpenBuilds CONTROL (Disables all integration until started again)',
+          label: 'Quit CBC (Disables all integration until started again)',
           click() {
             // appIcon.destroy();
             electronApp.exit(0);
@@ -3161,8 +3180,8 @@ if (isElectron()) {
         center: true,
         resizable: true,
         maximizable: true,
-        title: "OpenBuilds CONTROL ",
-        frame: false,
+        title: "CBC",
+        frame: true,
         autoHideMenuBar: true,
         //icon: '/app/favicon.png',
         icon: nativeImage.createFromPath(
@@ -3187,8 +3206,8 @@ if (isElectron()) {
 
       jogWindow.on('close', function(event) {
         if (!forceQuit) {
+          event.preventDefault();
           jogWindow.hide();
-          return false;
         }
       });
 
