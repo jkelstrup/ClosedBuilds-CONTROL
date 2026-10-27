@@ -1,7 +1,18 @@
 import assert from 'node:assert/strict';
 import { readFile, readdir, access } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join, dirname, sep } from 'node:path';
 import { extractFile, listPackage, statFile } from '@electron/asar';
+import { globSync } from 'node:fs';
+
+export function findUnsignedArchive(output: string): string {
+  const archives = globSync('**/app.asar', { cwd: output });
+  assert.equal(
+    archives.length,
+    1,
+    'Expected exactly one unsigned app.asar; build first, or pass an explicit archive path when multiple packages exist',
+  );
+  return join(output, archives[0]!);
+}
 
 const requiredFiles = [
   'index.js',
@@ -26,7 +37,10 @@ export async function verifyPackageResources(
   root: string,
   archive: string,
 ): Promise<void> {
-  const entries = listPackage(archive, { isPack: false });
+  // ASAR lists native separators, but the resource inventory is portable.
+  const entries = listPackage(archive, { isPack: false }).map((entry) =>
+    entry.split(sep).join('/'),
+  );
   assert(
     !entries.some((entry) =>
       /^\/(scripts|src|tests|docs|\.github|dist)(\/|$)/.test(entry),

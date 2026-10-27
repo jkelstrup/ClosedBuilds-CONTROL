@@ -76,6 +76,14 @@ Evidence recorded on `build/pr-verification`, macOS arm64, Node 24.22.1/npm 11.1
 
 See [the CI/release boundary](development.md#pull-request-verification-and-release-boundary). Keep the milestone's CI/packaging/release checklist item open until its remaining scope has evidence.
 
+### CI unsigned packaging slice (milestone 2)
+
+Evidence on `build/ci-unsigned-packages`, macOS arm64, Node 24.22.1/npm 11.19.1, Electron 23.3.13, electron-builder 24.13.3; no application startup or controller access:
+
+- `npm run check` passes 36 tests, including archive discovery for macOS Intel/ARM, Linux and Windows layouts, rejection of missing/ambiguous archives, and existing unsafe-package rejection checks. ASAR entry separators are normalized so exclusions apply on Windows too.
+- `npm run package` and argument-free `npm run verify:package` pass against the newly built macOS arm64 directory package. Builder explicitly skips signing; resources/native unpacking match current source.
+- The existing CI matrix now runs those packaging commands after its checks, without signing credentials, publishing, application launch, or artifact upload. Hosted execution, Windows/Linux packaging, desktop support, installers, security modernization, and project-owned tagged publishing remain unverified. Milestone 2 remains open.
+
 ## CBC 0.1.0 development checks
 
 Evidence recorded with the CBC 0.1.0 changes, macOS arm64, Node 24.22.1/npm 11.19.1, Electron 23.3.13, no controllers. User-facing changes are listed in [CHANGELOG.txt](../CHANGELOG.txt); watcher usage and storage compatibility are documented in [development.md](development.md).

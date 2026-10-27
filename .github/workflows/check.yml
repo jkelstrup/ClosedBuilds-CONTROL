@@ -17,7 +17,7 @@ jobs:
   check:
     name: Checks (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -56,3 +56,9 @@ jobs:
       - name: Run isolated browser checks
         if: runner.os == 'Linux'
         run: npm run test:e2e
+
+      - name: Build host unsigned directory package (no signing or publishing)
+        run: npm run package
+
+      - name: Verify packaged resources without application startup
+        run: npm run verify:package
