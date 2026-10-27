@@ -4,7 +4,7 @@ A CNC host for Grbl-family controllers, continuing the OpenBuilds CONTROL codeba
 
 ## Development
 
-The current desktop entry point is `npm run run-local` (`electron .`), after installing dependencies. Installation and platform compatibility are not yet validated for this fork; see [development guidance](docs/development.md) before installing or launching. `npm start` and `npm test` are currently placeholders, not verification.
+Use Node 24.22.1 (`nvm use`) and npm 11.19.1, then `npm ci` and `npm run verify:install`. Installation/native loading and a limited launch/browser UI smoke check passed on macOS arm64 only; full desktop workflows remain unverified. The desktop entry point is `npm run run-local` (`electron .`); read the [development safety guidance](docs/development.md) before launching. `npm start` and `npm test` are still placeholders, not verification.
 
 - [Current architecture and change navigation](docs/architecture.md)
 - [Architecture decisions and ADR process](docs/adr/README.md)

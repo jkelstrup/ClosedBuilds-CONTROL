@@ -4,17 +4,24 @@
   "license": "AGPL-3.0",
   "description": "OpenBuildsCONTROL CNC Machine Host Software",
   "author": "github.com/openbuilds <support@openbuilds.com>",
-  "resolutions": {
+  "engines": {
+    "node": "24.22.1",
+    "npm": "11.19.1"
+  },
+  "packageManager": "npm@11.19.1",
+  "overrides": {
     "@electron/notarize": "2.3.2"
   },
   "devDependencies": {
-    "electron": "^23.1.1",
+    "@electron/notarize": "2.3.2",
+    "electron": "23.3.13",
     "electron-builder": "^24.9.1",
-    "electron-builder-notarize": "latest",
+    "electron-builder-notarize": "1.5.2",
     "electron-rebuild": "^3.2.9",
     "ncp": "^2.0.0"
   },
   "dependencies": {
+    "@serialport/parser-readline": "12.0.0",
     "detect-rpi": "^1.4.0",
     "electron-updater": "^5.2.1",
     "evilscan": "^1.9.1",
@@ -40,6 +47,7 @@
     "test": "echo \"Error: no test specified\" && exit 0",
     "release": "echo \"When you want to create a new release, follow these steps:\" && echo \"1) Update the version in your project's package.json file (e.g. 1.0.3xx)\" && echo \"2) Commit that change (git commit -am v1.0.3xx)\" && echo \"3) Push your changes to GitHub (git push)\"",
     "run-local": "electron .",
+    "verify:install": "node scripts/verify-install.cjs",
     "postinstall": "electron-builder install-app-deps"
   },
   "keywords": [

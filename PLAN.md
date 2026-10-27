@@ -10,7 +10,7 @@ Decisions agreed during planning:
 - **TypeScript.** Use TypeScript for new and extracted modules, migrating in working increments.
 - **Feature preservation.** Preserve existing workflows initially. Inventory features before deciding which to retire.
 
-This is an implementation roadmap, not a description of architecture or commands already available. Milestone 1 is complete as a source-inspection baseline; milestones 2–6 are pending. Installation, application startup, packaging, and hardware behavior have not been validated. See [verification status](docs/testing.md) for the evidence and remaining gaps.
+This is an implementation roadmap, not a description of architecture or commands already available. Milestone 1 is complete as a source-inspection baseline; milestone 2 is in progress with locked installation/native loading and a limited launch/browser UI smoke check verified on macOS arm64. Milestones 3–6 are pending. Full desktop workflows, packaging, and hardware behavior have not been validated. See [verification status](docs/testing.md) for the evidence and remaining gaps.
 
 ## What makes changes difficult today
 
@@ -103,7 +103,8 @@ Each milestone should land as small, reviewable changes. Follow dependencies bel
 
 **Depends on:** 1.
 
-- [ ] Select and pin a supported Node/npm toolchain after checking Electron and native serial dependency compatibility. Commit the npm lockfile, remove its ignore rule, and replace floating `latest` dependencies with deliberate versions. Declare directly imported dependencies explicitly.
+- [x] Select and pin a supported Node/npm toolchain after checking Electron and native serial dependency compatibility. Commit the npm lockfile, remove its ignore rule, and replace floating `latest` dependencies with deliberate versions. Declare directly imported dependencies explicitly.
+  - Installation slice implemented: Node 24.22.1/npm 11.19.1, lockfile added and unignored, floating `latest` pinned, and direct parser/notarize imports declared. `npm ci`, dependency-tree validation, and `npm run verify:install` passed on macOS arm64 in host Node and Electron's Node mode. See [evidence and security gaps](docs/testing.md#locked-installation-slice-milestone-2). Full desktop/platform support and security modernization remain separate work.
 - [ ] Establish TypeScript builds for extracted modules and a small supported toolset: strict TypeScript, ESLint, Prettier, Vitest, and Playwright for cross-process/browser workflows. Pin compatible versions when implementing. Existing JavaScript remains runnable during migration.
 - [ ] Define module resolution and output formats explicitly; document how legacy CommonJS code loads extracted modules and how renderer/worker assets are built and served.
 - [ ] Replace placeholder scripts with real commands. Proposed command contract: `npm run dev` starts the app; `npm test` runs deterministic behavior tests; `npm run lint`, `npm run typecheck`, and `npm run build` verify their respective concerns; `npm run check` runs the fast aggregate. Add `npm run test:e2e`, `npm run dev:sim`, and `npm run package` when their implementations exist.

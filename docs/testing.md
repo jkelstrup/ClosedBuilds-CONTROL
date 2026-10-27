@@ -2,11 +2,25 @@
 
 ## Current evidence
 
-The milestone-1 baseline is documentation from source inspection. No clean dependency install, Electron launch, browser workflow, package, controller connection, movement, or flashing operation has been validated. There is no automated first-party behavior suite or controller simulator yet. `npm test` and `npm start` are successful-exit placeholders and **must not be reported as passing application checks**.
+The milestone-1 baseline is documentation from source inspection. Milestone 2 now has a locked installation/native-loading slice and a limited launch/browser UI smoke check (below). Full desktop/browser workflows, packaging, controller connection, movement, and flashing remain unverified. There is no automated first-party behavior suite or controller simulator yet. `npm test` and `npm start` are successful-exit placeholders and **must not be reported as passing application checks**.
 
 For documentation changes, use `git diff --check`, verify relative links against files, and cross-check named symbols, events, routes, and keys against source. These checks establish documentation consistency, not application correctness. Milestone 2 will establish reproducible installation and real checks; milestone 3 adds controller-free machine verification.
 
 Record evidence as: commit, exact command/scenario, OS/architecture, toolchain, controller/firmware or simulator, outcome, and remaining gap. Keep source inspection, simulated behavior, packaged behavior, and physical-controller evidence distinct in [features.md](features.md).
+
+### Locked installation slice (milestone 2)
+
+Evidence recorded on the `build/reproducible-install` branch in the locked-installation change:
+
+| Check | Environment and result | Scope / remaining gap |
+| --- | --- | --- |
+| `npm ci` | macOS arm64; Node 24.22.1, npm 11.19.1; passed, including `electron-builder install-app-deps` | Clean dependency replacement from lockfile; not a clean-checkout desktop/package check or native source compilation test |
+| `npm ls --depth=0` | Same host; passed with no missing/invalid direct dependencies | Dependency tree only |
+| `npm run verify:install` | Same host; passed in Node 24.22.1 and Electron 23.3.13 / embedded Node 18.12.1 | Native binding load, unopened SerialPort construction, and split-input readline parsing; no devices, application import, network services, or UI |
+| `npm audit` | Failed: 15 high and 1 critical affected packages | Known inherited-stack security debt; see [development guidance](development.md#current-setup-status). No forced major fixes applied |
+| `npm run run-local -- --user-data-dir=<temporary-profile>` | Same host; Electron process started and browser UI loaded at `http://localhost:3000`, showing v1.0.390 and `Port: Not Connected` | User confirmed controllers disconnected/trusted network. Logged missing temporary-profile `upload/firmware.bin` but continued serving UI. Native window contents could not be inspected because macOS denied assistive access. No controller commands or packaging checks |
+
+Run `npm ci` and `npm run verify:install` when changing dependencies. The smoke check fails on mismatched host Node/Electron versions, failed child execution, native-load failure, or incorrect parser output. It is not a substitute for future deterministic machine tests, TypeScript checks, or startup/packaging checks.
 
 ## Scenario selection for future implementation
 
@@ -31,7 +45,7 @@ These are verification requirements, not instructions to operate connected machi
 
 ## Remaining baseline gaps
 
-- Supported Node/npm and OS/architecture matrix are unestablished. Inherited CI/build targets are intentions, not test results.
+- Node/npm are pinned; installation/native loading is verified only on macOS arm64. Startup/packaging and the retained OS/architecture support matrix remain unestablished. Inherited CI/build targets are intentions, not test results.
 - Local UI flows have been located, but out-of-repo CAM, socket, HTTP, and macro consumers are unknown.
 - Library versions/local patches and firmware build provenance are not fully established.
 - Mobile PWA registration/cache paths and non-Electron/Pi startup are unverified.
