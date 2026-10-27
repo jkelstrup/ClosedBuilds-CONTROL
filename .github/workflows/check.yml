@@ -1,0 +1,50 @@
+name: Verification
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verification-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Checks (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up pinned Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Verify pinned npm
+        run: node -e "const assert = require('node:assert/strict'); const { execSync } = require('node:child_process'); assert.equal(execSync('npm --version', { encoding:'utf8' }).trim(), require('./package.json').engines.npm)"
+
+      - name: Install locked dependencies (including native modules)
+        run: npm ci
+
+      - name: Verify dependency tree
+        run: npm ls --depth=0
+
+      - name: Run local checks
+        run: npm run check
+
+      - name: Verify native loading in Node and Electron
+        run: npm run verify:install

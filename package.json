@@ -56,7 +56,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint scripts tests/toolchain vitest.config.mts --max-warnings=0",
-    "format:check": "prettier --check scripts tests/toolchain vitest.config.mts eslint.config.mjs tsconfig*.json .prettierrc.json package.json",
+    "format:check": "prettier --check scripts tests/toolchain .github/workflows vitest.config.mts eslint.config.mjs tsconfig*.json .prettierrc.json package.json",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build",
     "release": "echo \"When you want to create a new release, follow these steps:\" && echo \"1) Update the version in your project's package.json file (e.g. 1.0.3xx)\" && echo \"2) Commit that change (git commit -am v1.0.3xx)\" && echo \"3) Push your changes to GitHub (git push)\"",
     "run-local": "electron .",

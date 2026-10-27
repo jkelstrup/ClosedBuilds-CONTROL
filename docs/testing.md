@@ -31,7 +31,17 @@ Evidence recorded in the `build/typescript-checks` working branch, on macOS arm6
 - `npm run verify:install`: compiled TypeScript installation check passes in host Node and Electron's Node mode, without launching CONTROL or opening/listing ports.
 - `npm ci` and `npm ls --depth=0`: passed with the updated lockfile; the same 16 inherited audit findings remain. After checks, `npm run dev -- --user-data-dir=<temporary-profile>` started successfully, HTTP on port 3000 returned 200, and the user confirmed the app appeared to work. This is a limited startup smoke check, not machine or full desktop workflow verification.
 
-See [commands, output format, and exclusions](development.md#incremental-typescript-and-local-checks) before selecting checks. These results are tooling evidence only, not controller/application characterization. Playwright, renderer/worker builds, CI execution/failure probes, packaging, and the broader platform matrix remain pending.
+See [commands, output format, and exclusions](development.md#incremental-typescript-and-local-checks) before selecting checks. These results are tooling evidence only, not controller/application characterization. Playwright, renderer/worker builds, hosted CI execution/failure probes, packaging, and the broader platform matrix remain pending.
+
+### Pull-request CI slice (milestone 2)
+
+Evidence recorded on `build/pr-verification`, macOS arm64, Node 24.22.1/npm 11.19.1, Electron 23.3.13, no controllers:
+
+- `npm ci`, `npm ls --depth=0`, `npm run check` (18 tests), and `npm run verify:install` pass. Native loading passes in host Node and Electron's Node mode. Installation still reports the same 16 inherited security findings; this change does not resolve them.
+- The new `.github/workflows/check.yml` runs those commands on pull requests, `main` pushes, and manual dispatch using Linux/macOS/Windows runners. Workflow YAML is included in `npm run format:check`; Prettier successfully parses and checks it. The workflow has read-only repository permissions and no signing/publishing steps or release-secret references. The inherited push-to-release workflow is removed.
+- Hosted jobs have **not** run from this working branch. Runner compatibility, actual CI failure propagation, and branch-protection requirements remain unverified. The previous local test/type-error failure probes establish local command behavior only. No application startup, unsigned package, tagged release, or physical-controller evidence is claimed.
+
+See [the CI/release boundary](development.md#pull-request-verification-and-release-boundary). Keep the milestone's CI/packaging/release checklist item open until its remaining scope has evidence.
 
 ## CBC 0.1.0 development checks
 
