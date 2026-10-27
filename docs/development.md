@@ -4,10 +4,10 @@
 
 This repository is CBC, an independent project rather than an upstream-tracking fork. [Project identity](../README.md#independent-project) defines how we treat the abandoned OpenBuilds baseline; inherited identifiers and release configuration are migration debt, not a dependency on upstream ownership or maintenance. [PLAN.md](../PLAN.md) separates mapping from toolchain modernization; [architecture.md](architecture.md) describes what actually starts today. User-facing changes are recorded in [CHANGELOG.txt](../CHANGELOG.txt), above the retained upstream history.
 
-- `npm run dev` builds tooling and browser assets, then launches Electron with automatic rebuild/reload/restart (see below). `npm start` and `npm run run-local` build and launch `electron .` without watchers. None of the verification commands launch CONTROL.
+- `npm run dev` builds tooling and browser assets, then launches Electron with automatic rebuild/reload/restart (see below). `npm start` and `npm run run-local` build and launch `electron .` without watchers. Fast checks never launch CONTROL; the separate, explicitly gated `test:desktop` command does.
 - Use Node **24.22.1** (`nvm use`, using `.nvmrc`) and npm **11.19.1**, also declared in `package.json`. Install with `npm ci` from the checked-in lockfile. Its `postinstall` runs `electron-builder install-app-deps` and may download/rebuild native dependencies. Do not use `--ignore-scripts` for a complete installation.
 - Run `npm run verify:install` after installing. This loads serialport's native binding and checks split-line framing in host Node and in Electron's Node mode. It never imports the application, enumerates/opens ports, or starts servers/windows/updaters. This is an installation check, not an application behavior suite.
-- The first verified combination is macOS arm64, Node 24.22.1/npm 11.19.1, Electron **23.3.13** (embedded Node 18.12.1), serialport **12.0.0**, and native bindings **12.0.1**. The native package uses Node-API; loading under both runtimes passed. A limited launch/browser UI smoke check also passed; native source compilation, other platforms, full desktop workflows, and packaging remain unverified.
+- The first verified combination is macOS arm64, Node 24.22.1/npm 11.19.1, Electron **23.3.13** (embedded Node 18.12.1), serialport **12.0.0**, and native bindings **12.0.1**. The native package uses Node-API; loading under both runtimes passed. Source and unsigned directory-package startup/asset smoke checks also pass on this host; native source compilation, other platforms, installers, and full desktop workflows remain unverified.
 - Electron stays on the final 23.x patch within the inherited major for this bounded installation baseline, **not** as a supported/security-current Electron recommendation. Major Electron/native/build upgrades remain a dedicated milestone-2 change. Other inherited dependency ranges are resolved by the lockfile. `electron-builder-notarize` is pinned to 1.5.2 instead of `latest`; direct imports of `@electron/notarize` and `@serialport/parser-readline` are now declared. npm `overrides` replaces the previously ineffective Yarn `resolutions` for notarize 2.3.2.
 - `npm audit` reports **16 affected packages (15 high, 1 critical)** in this initial lock. These include Electron, updater/build tooling, `ip`, and transitive `tar`. Do not run `npm audit fix --force` blindly or treat this baseline as release-ready. Resolve these in targeted modernization/security work with runtime evidence. PR CI uses the pinned toolchain; inherited release automation has been removed, not modernized into an authorized release path.
 - `npm run check` runs formatting, lint, strict type checking, deterministic tooling/title tests, and tooling/browser builds. Machine behavior tests and a controller simulator do not exist yet. See [testing.md](testing.md).
@@ -40,6 +40,9 @@ Forward Electron flags with `npm run dev -- --user-data-dir=<temporary-profile>`
 | `npm run build` | Strict type checks, CommonJS tooling in `dist/checks/`, and browser/worker bundles in `app/generated/`; not a desktop package |
 | `npm run check` | All five checks above, stopping at the first failure |
 | `npm run verify:install` | Build, then run the compiled installation smoke check in host Node and Electron's Node mode |
+| `npm run package` | Build an unsigned directory package for the host OS/architecture; never sign, notarize, publish, install, or launch |
+| `npm run verify:package -- <app.asar>` | Inspect an existing unsigned package against current source assets, firmware/tools, Interface data and native binding layout; no app launch |
+| `npm run test:desktop` | Explicitly gated macOS source/package startup check; starts real machine-control services, requires disconnected controllers and an isolated trusted network |
 
 TypeScript 5.9.3 is deliberately below the type-aware ESLint plugin's `<6.1` support ceiling. Tool versions are exact-pinned in `package.json` and the npm lock. The compiler uses `NodeNext` resolution/output and an ES2022 target; with this package's unchanged CommonJS identity, ordinary `.ts` modules emit CommonJS `.js`. `.mts` is reserved for ESM tooling configuration. `strict`, unchecked index access, and exact optional-property checks are enabled. Third-party declaration internals use `skipLibCheck`; application/tooling source is still checked. Node types target the host toolchain; code executed in Electron's embedded Node must also stay compatible with Node 18, as the installation smoke check verifies for its current imports.
 
@@ -52,13 +55,13 @@ TypeScript 5.9.3 is deliberately below the type-aware ESLint plugin's `<6.1` sup
 - `src/renderer/legacy-entry.ts` bundles to `renderer.js`. Full and mobile HTML load it before `main.js`; the temporary `window.CBCWindowTitle` function bridges the extracted title formatter to the existing `setWindowTitle` callback. Version/file/port semantics remain in place; no persistence or socket contract changes.
 - `app/lib/3dview/workers/verylitegcodeviewer.js` bundles to `preview-worker.js`, now loaded by the viewer at an absolute URL. The worker remains maintained legacy JavaScript, not a strict TypeScript migration. Its absolute `/lib/threejs/three.min.js` import remains a separate shipped resource. The bundler explicitly avoids inheriting `alwaysStrict` emission because this classic worker relies on implicit globals; migrated TypeScript still receives full strict checking.
 
-`npm start`, `npm run run-local`, and `npm run dev` build before launching. Direct `electron .` requires a prior build. Ctrl+C/app exit disposes the development bundler along with existing watchers. Do not edit generated files. Future packaging must build and include `app/generated/` plus the external Three.js resource; installed/packaged delivery has not been verified.
+`npm start`, `npm run run-local`, and `npm run dev` build before launching. Direct `electron .` requires a prior build. Ctrl+C/app exit disposes the development bundler along with existing watchers. Do not edit generated files. Unsigned packaging builds and includes `app/generated/` plus the external Three.js resource; delivery from the directory package is verified on macOS arm64 only, not from an installed/signed release.
 
 ### Checked scope and migration exclusions
 
 Migrated production code includes tooling and `src/renderer/`, not machine control. Legacy root JavaScript (`index.js`, `grblStrings.js`, scan/sign/notarize scripts), application HTML/JavaScript, maintained viewer/worker and CNC mode, vendor candidates, historical samples, shipped resources, and inherited release automation are deliberately outside the new strict/format scope. Building the retained worker does not make it strict-checked. This does **not** classify maintained files as vendor or establish their correctness. Dependencies and generated `dist/`/`app/generated/` are excluded from linting.
 
-When a module migrates, add its source/tests to the compiler, ESLint, Prettier, and appropriate test runner scopes together and remove its replaced implementation. Do not mechanically format legacy files as part of unrelated behavior changes. Most renderer assets still use original global scripts; only title formatting and the worker build use the new output path. No `dev:sim` or packaging command exists yet.
+When a module migrates, add its source/tests to the compiler, ESLint, Prettier, and appropriate test runner scopes together and remove its replaced implementation. Do not mechanically format legacy files as part of unrelated behavior changes. Most renderer assets still use original global scripts; only title formatting and the worker build use the new output path. No `dev:sim` command exists yet.
 
 ### Isolated browser checks
 
@@ -72,7 +75,33 @@ Playwright **1.64.1** is exact-pinned. Run `npx playwright install chromium` onc
 
 Jobs have read-only repository permissions, do not retain checkout credentials, and require no release secrets. They never import `index.js`, launch the application, open controller ports, sign, package, or publish. The runner matrix is a verification target, not a statement of desktop/platform support; record actual hosted results in [testing.md](testing.md). A failing command fails its job; configure required status checks in repository branch protection separately if merge blocking is desired.
 
-The inherited push-to-release workflow, including certificate-content logging and the upstream build action, has been removed. There is intentionally **no release workflow**, including for tags. Unsigned packaging and explicitly authorized tagged releases must be established separately with project-owned destinations and credentials. Legacy builder/signing/update configuration remains in the source and must not be treated as safe release configuration.
+The inherited push-to-release workflow, including certificate-content logging and the upstream build action, has been removed. There is intentionally **no release workflow**, including for tags. Local unsigned packaging is separate (below); tagged releases still require project-owned destinations and explicit authorization. Legacy builder/signing/update configuration remains in the source and must not be treated as safe release configuration. CI does not currently package or launch the app.
+
+### Local unsigned package and startup checks
+
+Run `npm run package`. `scripts/package.ts` launches electron-builder with the explicit `electron-builder.unsigned.json`, `--dir`, and `--publish never`; it accepts no extra arguments. This config does not extend or merge `package.json.build`. Signing/notarization hooks and identities are disabled, signing auto-discovery is off, and the launcher removes signing/publishing credentials from its child environment. The command only writes a host-architecture directory package under ignored `dist/unsigned/`; it is not an installer. Upstream Electron downloads may be needed on the first run.
+
+The unsigned config retains existing app identity and profile compatibility, but sets `cbcUnsignedVerification: true` in the packaged manifest. `index.js` does not initialize electron-updater for this variant; update download/apply socket handlers are inert without an updater. No development or generated update-feed file is shipped. Existing renderer update notices/HTTP lookups and Interface firmware downloads are not an offline mode and remain separate migration debt.
+
+The runtime allowlist includes app assets/generated bundles, entry point/alarm strings, root firmware/flashing tools, licenses/history, and the inherited TLS pair required by startup. Production dependencies are supplied by electron-builder. Firmware binaries, flashing executables, and native `.node` files are explicitly unpacked. Development scripts/source/tests/docs and signing scripts are excluded. `scripts/package-resources.ts` compares representative runtime files and all root firmware/tools and Interface probe/profile files against source, verifies native/unpacked paths and the unsigned marker/version, and rejects development files/update feeds. It checks resource availability, not flashing correctness.
+
+**Do not distribute this verification artifact.** It still contains inherited tracked TLS material and old runtime dependencies; no signing trust, update migration, installer behavior, or release security is established. On Apple Silicon, the Electron executable can retain its linker-generated ad-hoc signature; no project signing identity or notarization is applied.
+
+For the currently verified macOS arm64 layout:
+
+```sh
+npm run package
+npm run verify:package -- dist/unsigned/mac-arm64/CBC.app/Contents/Resources/app.asar
+```
+
+After disconnecting controllers, using a trusted isolated network, and quitting other CBC instances, opt in separately to real startup checks:
+
+```sh
+CBC_DESKTOP_SMOKE=1 npm run test:desktop
+CBC_DESKTOP_SMOKE=1 CBC_PACKAGED_EXECUTABLE="$PWD/dist/unsigned/mac-arm64/CBC.app/Contents/MacOS/CBC" npm run test:desktop
+```
+
+The desktop check uses a disposable profile, a selected free HTTP port, and a preflight for legacy HTTPS port 3001. It refuses to launch without the explicit opt-in, on non-macOS hosts, or if port 3001 is occupied. It checks actual packaged/source identity, profile isolation, disconnected status, asset HTTP responses, a real preview-worker result, splash dismissal, and port release on close. It does not issue controller commands. Chromium external DNS is blocked during the check, but Node-side Interface firmware fetching can still access the network. Screenshots are written under ignored `test-results/desktop/`; profile directories and launched processes are cleaned up. This does not test data migration, motion, flashing, installed launch, development reloads, or complete native lifecycle behavior.
 
 ### Troubleshooting entry points
 
@@ -119,7 +148,7 @@ For ordinary application searches, start with `index.js`, `grblStrings.js`, `app
 
 ### Packaged path interface
 
-`package.json.build` is authoritative for current packaging rules. It has broad file inclusion, `extraFiles: ["ssl"]`, and unpack rules for root `*.bin` and esptool executables. The `ssl`/`firmware` globs do not establish that those directories exist; startup currently reads TLS from root files.
+`npm run package` uses the independent [unsigned configuration](../electron-builder.unsigned.json), with the runtime allowlist and explicit native/firmware/tool unpack rules described above. `package.json.build` retains historical release settings, broad file inclusion, `extraFiles: ["ssl"]`, and unpack rules for root `*.bin` and esptool executables; ordinary packaging does not use it. The inherited `ssl`/`firmware` globs do not establish that those directories exist; startup currently reads TLS from root files.
 
 Flashing code rewrites `app.asar` to `app.asar.unpacked` for tools, bootloaders, partition tables, and firmware paths. Interface images may be downloaded into the user-data upload directory. AVR `flashGrbl` retains commented-out implementation and refers to inherited tooling assumptions. A source-file move needs both reference checks and packaged-path tests; a successful TypeScript build alone cannot establish correctness.
 
@@ -133,7 +162,7 @@ The visible product name is **CBC** (`package.json` productName, Electron name, 
 | Update feed/changelog/stats | `dev-app-update.yml`; `app/js/updates.js`, `main.js`; `index.js` updater handlers | Prevent fork installations from receiving upstream binaries; test update ownership before enabling releases |
 | Application identity and persistence | `package.json` name/productName/appId; `index.js` AppUserModelId and `getPath('userData')` | Renaming can select a new profile, change file associations and installed-app identity; preserve/export/migrate preferences and macros |
 | macOS signing identity | `notarize.js`, `package.json.build`, `build/entitlements.mac.plist`, CI | Notarization bundle ID (`app.openbuilds.control`) differs from builder appId (`openbuilds.control`); reconcile deliberately with project-owned credentials |
-| Windows signing / release publishing | `signWin.js`, builder publish configuration | Inherited publishing workflow and certificate-content logging removed; credential-free PR checks are separate. Unsigned packaging and project-owned authorized tagged releases remain pending |
+| Windows signing / release publishing | `signWin.js`, inherited builder publish configuration; separate `electron-builder.unsigned.json` | Inherited publishing workflow and certificate-content logging removed; credential-free PR checks and local unsigned packaging are separate. Windows artifact/startup evidence and project-owned tagged releases remain pending |
 | TLS and network exposure | Root PEM files; `index.js` listeners/CORS; renderer Node integration settings | Establish owned TLS/trust and access policy; validation schemas alone do not authorize machine operations |
 | Pi and older platform automation | `pi-install.sh`, `pi-shortcut.desktop`, `.travis.yml`, `appveyor.yml`, `electron-builder/` | Upstream downloads/clone paths, machine-modifying steps and stale assumptions need review; do not present as verified setup |
 | License and attribution | `LICENSE`, `package.json.license`, `build/licence.txt`, library headers, copied wizard/macro code | Retain notices and review distribution obligations before replacing assets or publishing |

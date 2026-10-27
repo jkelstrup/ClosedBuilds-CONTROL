@@ -2,7 +2,7 @@
 
 ## Current evidence
 
-The milestone-1 baseline is documentation from source inspection. Milestone 2 now has locked installation/native loading, a limited launch/browser UI smoke check, and real tooling checks (below). Full desktop/browser workflows, packaging, controller connection, movement, and flashing remain unverified. `npm test` now runs toolchain and development-watcher tests; there is no machine behavior suite or controller simulator yet. `npm start` now launches the app, rather than acting as a verification placeholder.
+The milestone-1 baseline is documentation from source inspection. Milestone 2 now has locked installation/native loading, real tooling/browser checks, and source/unsigned directory-package startup checks on macOS arm64 (below). Full desktop/browser workflows, installers, other platforms, controller connection, movement, and flashing remain unverified. `npm test` runs tooling, packaging-boundary, watcher, and title tests; there is no machine behavior suite or controller simulator yet. `npm start` launches the app, rather than acting as a verification placeholder.
 
 For documentation changes, use `git diff --check`, verify relative links against files, and cross-check named symbols, events, routes, and keys against source. These checks establish documentation consistency, not application correctness. Milestone 2 is establishing reproducible installation and real checks; milestone 3 adds controller-free machine verification.
 
@@ -31,7 +31,7 @@ Evidence recorded in the `build/typescript-checks` working branch, on macOS arm6
 - `npm run verify:install`: compiled TypeScript installation check passes in host Node and Electron's Node mode, without launching CONTROL or opening/listing ports.
 - `npm ci` and `npm ls --depth=0`: passed with the updated lockfile; the same 16 inherited audit findings remain. After checks, `npm run dev -- --user-data-dir=<temporary-profile>` started successfully, HTTP on port 3000 returned 200, and the user confirmed the app appeared to work. This is a limited startup smoke check, not machine or full desktop workflow verification.
 
-See [commands, output format, and exclusions](development.md#incremental-typescript-and-local-checks) before selecting checks. These results are tooling evidence only, not controller/application characterization. Hosted CI execution/failure probes, packaging, and the broader platform matrix remain pending. Subsequent browser/build slices are recorded below.
+See [commands, output format, and exclusions](development.md#incremental-typescript-and-local-checks) before selecting checks. These results are tooling evidence only, not controller/application characterization. Hosted CI execution/failure probes, installed/signed packaging, and the broader platform matrix remain pending. Subsequent browser/build/package slices are recorded below.
 
 ### Isolated browser checks (milestone 2)
 
@@ -51,7 +51,20 @@ Evidence on `build/browser-runtime-assets`, macOS arm64, Node 24.22.1/npm 11.19.
 - `npm ci`, `npm ls --depth=0`, and `npm run verify:install` pass with the esbuild lockfile update, including native loading in host Node and Electron's Node mode. Installation still reports the same 16 inherited audit findings.
 - The app's HTML/worker consumers now reference generated assets; startup commands build before launching. No application startup, real HTTP delivery, native desktop rebuild/reload session, packaging, broad parser characterization, or machine behavior was exercised in this slice. Those remain separate evidence gaps.
 
-See [browser output contracts](development.md#browser-and-worker-output). Milestone 2 still needs packaging/startup/platform evidence and project-owned release configuration.
+See [browser output contracts](development.md#browser-and-worker-output). The subsequent unsigned-package slice adds local startup/packaging evidence; broader platform support and project-owned release configuration remain pending.
+
+### Unsigned directory package and desktop startup (milestone 2)
+
+Evidence on `build/unsigned-package-verification`, macOS arm64 (host reports Darwin 27), Node 24.22.1/npm 11.19.1, Electron 23.3.13, electron-builder 24.13.3, Playwright 1.64.1. The maintainer explicitly confirmed disconnected controllers and a trusted isolated network. No machine commands were sent.
+
+- `npm run package` builds `dist/unsigned/mac-arm64/CBC.app`. Builder logs confirm the independent config and skipped macOS signing because identity is explicitly null; no signing/notarization hook or publishing occurs. `codesign -dv` shows the retained Electron linker-generated **ad-hoc** signature, no TeamIdentifier and no sealed resources, not project signing trust.
+- `npm run verify:package -- dist/unsigned/mac-arm64/CBC.app/Contents/Resources/app.asar` passes: generated assets, Three.js, Ace CNC mode, HTML/icons, licenses/history, inherited TLS files, root firmware/tools, Interface probe/profile files, and unpacked native bindings are present. Required bytes match current source. Development directories/update feeds are absent and the manifest has the unsigned marker/current version. Inspection initially exposed missing explicit native unpacking; `**/*.node` now makes that layout deliberate.
+- `CBC_DESKTOP_SMOKE=1 npm run test:desktop` and the same command with `CBC_PACKAGED_EXECUTABLE="$PWD/dist/unsigned/mac-arm64/CBC.app/Contents/MacOS/CBC"` pass. Source/package identity and disposable profile paths are checked, status reports connection state 0, required assets return HTTP 200, the served worker produces the 5-unit linear path, the splash disappears, and closing the app releases its HTTP/HTTPS ports. A first attempt correctly refused to launch while an existing instance occupied port 3001; the maintainer closed it before retrying.
+- `npm run check` includes 30 deterministic tests and strict checks for the new scripts/desktop tests/config. Unit checks verify credential filtering, explicit unsigned policy, rejection of development/update-feed/non-verification artifacts, and the packaged updater guard without importing the app. The separately gated desktop test is not run by `check`, normal browser tests, or CI.
+- `npm ci`, `npm ls --depth=0`, `npm run verify:install` (host Node and Electron's Node mode), and `npm run test:e2e` (two isolated browser checks) pass. The same 16 inherited audit findings remain. Running the desktop Playwright config without `CBC_DESKTOP_SMOKE=1` exits 1 before app launch, as intended.
+- Gaps: no installed/signed/notarized application, installer, Windows/Linux/x64 artifact/runtime, complete desktop lifecycle, existing-data round trip, development rebuild/reload, motion, or flashing evidence. Native window icon code still references an inherited missing `app/favicon.png`; the actual shipped favicon is `.ico`. No full branding claim is made. The package retains tracked legacy TLS material and security debt and is **not distributable**; source/renderer update endpoints and Node-side firmware fetching remain migration debt. Firmware/tool byte verification does not prove that flashing works.
+
+See [commands, safety gate and artifact boundary](development.md#local-unsigned-package-and-startup-checks). Milestone 2 remains open for platform/support evidence, modernization/security work, hosted CI results, and project-owned release configuration.
 
 ### Pull-request CI slice (milestone 2)
 
@@ -94,7 +107,7 @@ These are verification requirements, not instructions to operate connected machi
 
 ## Remaining baseline gaps
 
-- Node/npm are pinned; installation/native loading is verified only on macOS arm64. Startup/packaging and the retained OS/architecture support matrix remain unestablished. Inherited CI/build targets are intentions, not test results.
+- Node/npm are pinned; installation/native loading and source/unsigned directory-package startup are verified only on macOS arm64. Installed/signed releases and the retained OS/architecture support matrix remain unestablished. Inherited CI/build targets are intentions, not test results.
 - Local UI flows have been located, but out-of-repo CAM, socket, HTTP, and macro consumers are unknown.
 - Library versions/local patches and firmware build provenance are not fully established.
 - Mobile PWA registration/cache paths and non-Electron/Pi startup are unverified.

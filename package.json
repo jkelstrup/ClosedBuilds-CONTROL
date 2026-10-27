@@ -13,6 +13,7 @@
     "@electron/notarize": "2.3.2"
   },
   "devDependencies": {
+    "@electron/asar": "3.4.1",
     "@electron/notarize": "2.3.2",
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.64.1",
@@ -56,10 +57,13 @@
     "dev": "npm run build && node dist/checks/scripts/dev.js",
     "test": "vitest run",
     "test:e2e": "npm run build && playwright test",
+    "test:desktop": "npm run build && playwright test --config playwright.desktop.config.ts",
+    "package": "npm run build && node dist/checks/scripts/package.js",
+    "verify:package": "node dist/checks/scripts/verify-package.js",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc -p tsconfig.e2e.json && tsc -p tsconfig.renderer.json",
     "build": "npm run typecheck && tsc -p tsconfig.build.json && node dist/checks/scripts/build-browser.js",
-    "lint": "eslint scripts src tests/toolchain tests/e2e playwright.config.ts vitest.config.mts --max-warnings=0",
-    "format:check": "prettier --check scripts src tests/toolchain tests/e2e .github/workflows playwright.config.ts vitest.config.mts eslint.config.mjs tsconfig*.json .prettierrc.json package.json",
+    "lint": "eslint scripts src tests/toolchain tests/e2e tests/desktop playwright.config.ts playwright.desktop.config.ts vitest.config.mts --max-warnings=0",
+    "format:check": "prettier --check scripts src tests/toolchain tests/e2e tests/desktop .github/workflows playwright.config.ts playwright.desktop.config.ts vitest.config.mts eslint.config.mjs tsconfig*.json .prettierrc.json package.json electron-builder.unsigned.json",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build",
     "release": "echo \"When you want to create a new release, follow these steps:\" && echo \"1) Update the version in your project's package.json file (e.g. 1.0.3xx)\" && echo \"2) Commit that change (git commit -am v1.0.3xx)\" && echo \"3) Push your changes to GitHub (git push)\"",
     "run-local": "npm run build && electron .",

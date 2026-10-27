@@ -4,5 +4,10 @@
     "lib": ["ES2022", "DOM"],
     "noEmit": true
   },
-  "include": ["tests/e2e/**/*.ts", "playwright.config.ts"]
+  "include": [
+    "tests/e2e/**/*.ts",
+    "tests/desktop/**/*.ts",
+    "playwright.config.ts",
+    "playwright.desktop.config.ts"
+  ]
 }

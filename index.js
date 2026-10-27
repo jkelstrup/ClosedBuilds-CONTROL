@@ -232,7 +232,7 @@ var autoUpdater
 
 
 var updateIsDownloading = false;
-if (isElectron()) {
+if (isElectron() && require('./package').cbcUnsignedVerification !== true) {
   autoUpdater = require("electron-updater").autoUpdater
   var availversion = '0.0.0'
 
@@ -306,7 +306,7 @@ if (isElectron()) {
     updateIsDownloading = false;
   });
 } else {
-  debug_log("Running outside Electron: Disabled AutoUpdater")
+  debug_log("AutoUpdater disabled outside Electron or in an unsigned verification package")
 }
 
 if (isElectron()) {
@@ -887,7 +887,7 @@ io.on("connection", function(socket) {
   });
 
   socket.on("applyUpdate", function(data) {
-    autoUpdater.quitAndInstall();
+    if (autoUpdater) autoUpdater.quitAndInstall();
   })
 
   socket.on("downloadUpdate", function(data) {

@@ -12,6 +12,8 @@ Inherited attribution and licensing remain in force. Remaining OpenBuilds identi
 
 Use Node 24.22.1 (`nvm use`) and npm 11.19.1, then `npm ci`, `npm run check`, and `npm run verify:install`. Installation/native loading and a limited launch/browser UI smoke check passed on macOS arm64 only; full desktop workflows remain unverified. Launch with `npm run dev` (builds browser assets, then runs `electron .`); read the [development safety guidance](docs/development.md) first. Checks cover migrated tooling/renderer code, not machine behavior. For isolated browser checks, install Chromium with `npx playwright install chromium`, then run `npm run test:e2e`.
 
+`npm run package` builds a local unsigned directory artifact with signing/publishing disabled. Source/package startup and required assets are verified on macOS arm64 only, not installers or full workflows. These artifacts retain legacy security/TLS debt and are **not for distribution**. See [packaging and opt-in desktop checks](docs/development.md#local-unsigned-package-and-startup-checks).
+
 - [Current architecture and change navigation](docs/architecture.md)
 - [Architecture decisions and ADR process](docs/adr/README.md)
 - [Feature preservation inventory](docs/features.md)

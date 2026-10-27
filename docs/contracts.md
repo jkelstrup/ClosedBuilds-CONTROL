@@ -35,7 +35,7 @@ Every application command listener below is in the `io.on('connection')` block i
 | Firmware | `flashGrbl`, `flashGrblHal`, `flashInterface`, `flashBLOX` | Port/file and variant-specific custom-image/erase options; inspect current flasher's emitted object before changing |
 | Interface drive | `openInterfaceDir`, `writeInterfaceUsbDrive` | Native directory selection; `{drive, controller, ssid, psk}` copies resources and optional Wi-Fi configuration |
 | Desktop | `openFile`, `gpuinfo`, `minimisetotray`, `minimize`, `maximize`, `fullscreen`, `quit` | Native dialogs/window/process operations, not independent browser implementations |
-| Updater | `applyUpdate`, `downloadUpdate` | Quit/install or check/download; desktop updater instance |
+| Updater | `applyUpdate`, `downloadUpdate` | Quit/install or check/download; desktop updater instance. Both are no-ops in unsigned verification packages, which do not initialize an updater |
 | External links | `openbuilds`, `openbuildspartstore`, `carveco`, `fabber`, `lightburn`, `vectric`, `opencam`, `opendocs`, `openforum` | Electron external browser actions |
 
 No literal active UI emitters were found for some listeners (including `jogTo`, `setZero`, `gotoZero`, `setPosition`, `probe`, debug/SD commands, `resetMachine`, and `quit`). Their presence is not proof of a supported UI path; macros or external consumers may still rely on them. Current UI often generates equivalent G-code through `runCommand`/`runJob` instead.

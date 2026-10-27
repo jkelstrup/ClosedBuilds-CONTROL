@@ -17,7 +17,9 @@ export default tseslint.config(
       'src/renderer/**/*.ts',
       'tests/toolchain/**/*.ts',
       'tests/e2e/**/*.ts',
+      'tests/desktop/**/*.ts',
       'playwright.config.ts',
+      'playwright.desktop.config.ts',
       'vitest.config.mts',
     ],
     extends: [
