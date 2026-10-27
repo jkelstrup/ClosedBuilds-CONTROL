@@ -9,11 +9,14 @@ test('shipped preview worker loads Three.js and returns linear toolpath data', a
   page,
 }) => {
   const origin = 'http://preview.test';
+  expect(await readFile('app/lib/3dview/3dview.js', 'utf8')).toContain(
+    "new Worker('/generated/preview-worker.js')",
+  );
+  expect(await readFile('app/generated/preview-worker.js', 'utf8')).toContain(
+    'Simplified by Andrew Hodel in 2015',
+  );
   const assets = new Map([
-    [
-      '/lib/3dview/workers/verylitegcodeviewer.js',
-      'app/lib/3dview/workers/verylitegcodeviewer.js',
-    ],
+    ['/generated/preview-worker.js', 'app/generated/preview-worker.js'],
     ['/lib/threejs/three.min.js', 'app/lib/threejs/three.min.js'],
   ]);
   const loaded: string[] = [];
@@ -41,7 +44,7 @@ test('shipped preview worker loads Three.js and returns linear toolpath data', a
   });
   await page.goto(origin);
   const result = await page.evaluate(async () => {
-    const worker = new Worker('lib/3dview/workers/verylitegcodeviewer.js');
+    const worker = new Worker('/generated/preview-worker.js');
     try {
       return await new Promise<unknown>((resolve, reject) => {
         worker.onerror = (event) => reject(new Error(event.message));

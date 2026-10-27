@@ -34,7 +34,7 @@ HTTP initially uses `WEB_PORT` or the fallback list in `config.webPorts`; `httpS
 
 Electron `ready` handlers create the tray/menu and show the window on macOS/Linux; Windows normally starts in the tray and enables login startup. `createJogWindow` loads the local HTTP origin, with `nodeIntegration: true` and `contextIsolation: false`. The desktop uses native OS window controls; legacy window-control socket listeners remain available. Exit handlers terminate the app; cleanup of machine timers/connections is not represented by a single session lifecycle.
 
-`npm run dev` uses the compiled `scripts/dev.ts` launcher and `scripts/dev-session.ts` watcher to reload the desktop renderer for frontend edits or quit/restart Electron for main-process edits. A guarded development-only IPC hook in `index.js` accepts these messages. Normal startup has no watcher or development IPC handler; see [development reloads](development.md#automatic-development-reloads) for scope and state-loss behavior.
+`npm run dev` uses the compiled `scripts/dev.ts` launcher, `scripts/browser-build.ts` bundler, and `scripts/dev-session.ts` watcher to rebuild browser assets/reload the desktop renderer for frontend edits or quit/restart Electron for main-process edits. A guarded development-only IPC hook in `index.js` accepts these messages. Normal startup builds once and has no watcher or development IPC handler; see [development reloads](development.md#automatic-development-reloads) for scope and state-loss behavior.
 
 There are `isElectron()` and Raspberry Pi/Chrome branches, but Electron is required and used earlier without a complete non-Electron startup seam. Treat plain `node index.js` support as unverified, not a documented alternative launch command.
 
@@ -59,9 +59,9 @@ Preserve the distinction between **queued**, **sent**, **acknowledged**, and **m
 
 The script list at the end of `app/index.html` is the current dependency map: theme/diagnostics and libraries precede the viewer; macros, main/UI/settings, websocket, jogging/keyboard, preview, and wizards install globals and ready callbacks. Inline HTML handlers also consume them. Reordering or changing script scope can break consumers even when the edited file has no explicit imports.
 
-Mobile jog loads a subset of those same scripts. `mobilejog.js` changes widget behavior; verify this consumer when changing shared initialization. `widget.js` generates a QR link using hard-coded port 3000, regardless of HTTP fallback configuration.
+Mobile jog loads a subset of those same scripts. Both full/mobile HTML load `/generated/renderer.js` before `main.js`; `src/renderer/legacy-entry.ts` exposes the extracted title formatter through a temporary `window.CBCWindowTitle` bridge. Other scripts and initialization remain legacy globals. `mobilejog.js` changes widget behavior; verify this consumer when changing shared initialization. `widget.js` generates a QR link using hard-coded port 3000, regardless of HTTP fallback configuration.
 
-`parseGcodeInWebWorker` in `app/lib/3dview/3dview.js` creates `lib/3dview/workers/verylitegcodeviewer.js`. That worker imports `/lib/threejs/three.min.js`, posts progress and JSON preview results, and the caller constructs Three.js geometry. Absolute and relative URL paths are part of the interface when moving or bundling these files. Ace dynamically loads the customized `ace/mode/cncpro` mode selected in `main.js`.
+`parseGcodeInWebWorker` in `app/lib/3dview/3dview.js` creates `/generated/preview-worker.js`, built from the retained `app/lib/3dview/workers/verylitegcodeviewer.js`. That classic worker still imports `/lib/threejs/three.min.js`, posts progress and JSON preview results, and the caller constructs Three.js geometry. Build output lives under the existing static root; see [output contracts](development.md#browser-and-worker-output). Absolute and relative URL paths are part of the interface when moving or bundling these files. Ace dynamically loads the customized `ace/mode/cncpro` mode selected in `main.js`.
 
 ## Persistence and external effects
 

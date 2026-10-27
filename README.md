@@ -10,7 +10,7 @@ Inherited attribution and licensing remain in force. Remaining OpenBuilds identi
 
 ## Development
 
-Use Node 24.22.1 (`nvm use`) and npm 11.19.1, then `npm ci`, `npm run check`, and `npm run verify:install`. Installation/native loading and a limited launch/browser UI smoke check passed on macOS arm64 only; full desktop workflows remain unverified. Launch with `npm run dev` (`electron .`); read the [development safety guidance](docs/development.md) first. Checks currently cover migrated tooling, not machine behavior.
+Use Node 24.22.1 (`nvm use`) and npm 11.19.1, then `npm ci`, `npm run check`, and `npm run verify:install`. Installation/native loading and a limited launch/browser UI smoke check passed on macOS arm64 only; full desktop workflows remain unverified. Launch with `npm run dev` (builds browser assets, then runs `electron .`); read the [development safety guidance](docs/development.md) first. Checks cover migrated tooling/renderer code, not machine behavior. For isolated browser checks, install Chromium with `npx playwright install chromium`, then run `npm run test:e2e`.
 
 - [Current architecture and change navigation](docs/architecture.md)
 - [Architecture decisions and ADR process](docs/adr/README.md)

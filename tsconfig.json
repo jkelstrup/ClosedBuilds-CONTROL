@@ -16,5 +16,10 @@
     "rootDir": ".",
     "outDir": "dist/checks"
   },
-  "include": ["scripts/**/*.ts", "tests/toolchain/**/*.ts", "vitest.config.mts"]
+  "include": [
+    "scripts/**/*.ts",
+    "src/renderer/**/*.test.ts",
+    "tests/toolchain/**/*.ts",
+    "vitest.config.mts"
+  ]
 }

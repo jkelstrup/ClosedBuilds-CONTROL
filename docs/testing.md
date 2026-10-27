@@ -31,7 +31,7 @@ Evidence recorded in the `build/typescript-checks` working branch, on macOS arm6
 - `npm run verify:install`: compiled TypeScript installation check passes in host Node and Electron's Node mode, without launching CONTROL or opening/listing ports.
 - `npm ci` and `npm ls --depth=0`: passed with the updated lockfile; the same 16 inherited audit findings remain. After checks, `npm run dev -- --user-data-dir=<temporary-profile>` started successfully, HTTP on port 3000 returned 200, and the user confirmed the app appeared to work. This is a limited startup smoke check, not machine or full desktop workflow verification.
 
-See [commands, output format, and exclusions](development.md#incremental-typescript-and-local-checks) before selecting checks. These results are tooling evidence only, not controller/application characterization. Renderer/worker builds, hosted CI execution/failure probes, packaging, and the broader platform matrix remain pending. The subsequent Playwright slice is recorded below.
+See [commands, output format, and exclusions](development.md#incremental-typescript-and-local-checks) before selecting checks. These results are tooling evidence only, not controller/application characterization. Hosted CI execution/failure probes, packaging, and the broader platform matrix remain pending. Subsequent browser/build slices are recorded below.
 
 ### Isolated browser checks (milestone 2)
 
@@ -41,6 +41,17 @@ Evidence on `build/playwright-preview-check`, macOS arm64, Node 24.22.1/npm 11.1
 - `npm run check` passes all 18 existing tests and the expanded formatting/lint/type checks. Browser execution is separate from this fast aggregate. Linux CI now installs Chromium and runs `test:e2e`; hosted execution remains unverified.
 - `npm ci`, `npm ls --depth=0`, and `npm run verify:install` pass with the updated lockfile; native loading passes in host Node and Electron's Node mode. The same 16 inherited audit findings remain.
 - This is narrow preview-worker evidence, not full viewer/UI, server delivery, packaged paths, arcs/large-file behavior, simulation, or physical-machine verification. See [browser setup and isolation](development.md#isolated-browser-checks).
+
+### Browser runtime builds (milestone 2)
+
+Evidence on `build/browser-runtime-assets`, macOS arm64, Node 24.22.1/npm 11.19.1, esbuild 0.28.2, Playwright 1.64.1/bundled Chromium, no controllers:
+
+- `npm run check` passes 22 tests, strict tooling/renderer/browser-test checks, CommonJS tooling compilation, and browser builds. New tests cover title formatting and isolated build/watch updates for both renderer/worker entries; the legacy callback branding test now uses the extracted formatter.
+- `npm run test:e2e` passes two browser checks against generated assets: the worker's Three.js import and 5-unit linear path, plus title formatting through the actual legacy callback on inert full/mobile paths with script-order checks. An initial bundler attempt inherited strict-mode emission and failed the worker check with `GCodeParser is not defined`; preserving classic-worker emission fixes that compatibility regression without editing the parser.
+- `npm ci`, `npm ls --depth=0`, and `npm run verify:install` pass with the esbuild lockfile update, including native loading in host Node and Electron's Node mode. Installation still reports the same 16 inherited audit findings.
+- The app's HTML/worker consumers now reference generated assets; startup commands build before launching. No application startup, real HTTP delivery, native desktop rebuild/reload session, packaging, broad parser characterization, or machine behavior was exercised in this slice. Those remain separate evidence gaps.
+
+See [browser output contracts](development.md#browser-and-worker-output). Milestone 2 still needs packaging/startup/platform evidence and project-owned release configuration.
 
 ### Pull-request CI slice (milestone 2)
 

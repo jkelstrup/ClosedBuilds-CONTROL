@@ -8,11 +8,13 @@ export default tseslint.config(
       'dist/**',
       'test-results/**',
       'playwright-report/**',
+      'app/generated/**',
     ],
   },
   {
     files: [
       'scripts/**/*.ts',
+      'src/renderer/**/*.ts',
       'tests/toolchain/**/*.ts',
       'tests/e2e/**/*.ts',
       'playwright.config.ts',
@@ -24,7 +26,11 @@ export default tseslint.config(
     ],
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.json', './tsconfig.e2e.json'],
+        project: [
+          './tsconfig.json',
+          './tsconfig.e2e.json',
+          './tsconfig.renderer.json',
+        ],
         tsconfigRootDir: import.meta.dirname,
       },
     },

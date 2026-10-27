@@ -3,6 +3,7 @@ import path from 'node:path';
 import { runInNewContext } from 'node:vm';
 import { describe, expect, it, vi } from 'vitest';
 import manifest from '../package.json';
+import { formatWindowTitle } from '../src/renderer/window-title.js';
 
 describe('CBC branding (without starting CONTROL)', () => {
   it('retains version, filename and port in the native window title', () => {
@@ -18,6 +19,7 @@ describe('CBC branding (without starting CONTROL)', () => {
     };
     runInNewContext(`${titleFunction}\nsetWindowTitle(laststatus);`, {
       document,
+      window: { CBCWindowTitle: formatWindowTitle },
       laststatus: status,
       loadedFileName: 'example.nc',
       nostatusyet: false,
