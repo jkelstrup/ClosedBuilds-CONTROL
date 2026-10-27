@@ -2,7 +2,7 @@
 
 ## Current setup status
 
-The repository is an independently maintained continuation named CBC; internal identifiers and release infrastructure still use inherited OpenBuilds values. [PLAN.md](../PLAN.md) separates mapping from toolchain modernization; [architecture.md](architecture.md) describes what actually starts today. User-facing changes are recorded in [CHANGELOG.txt](../CHANGELOG.txt), above the retained upstream history.
+This repository is CBC, an independent project rather than an upstream-tracking fork. [Project identity](../README.md#independent-project) defines how we treat the abandoned OpenBuilds baseline; inherited identifiers and release configuration are migration debt, not a dependency on upstream ownership or maintenance. [PLAN.md](../PLAN.md) separates mapping from toolchain modernization; [architecture.md](architecture.md) describes what actually starts today. User-facing changes are recorded in [CHANGELOG.txt](../CHANGELOG.txt), above the retained upstream history.
 
 - `npm run dev` builds the TypeScript tooling and launches Electron with automatic reload/restart (see below). `npm start` and `npm run run-local` launch `electron .` without watchers. None of the verification commands launch CONTROL.
 - Use Node **24.22.1** (`nvm use`, using `.nvmrc`) and npm **11.19.1**, also declared in `package.json`. Install with `npm ci` from the checked-in lockfile. Its `postinstall` runs `electron-builder install-app-deps` and may download/rebuild native dependencies. Do not use `--ignore-scripts` for a complete installation.

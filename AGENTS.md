@@ -1,5 +1,9 @@
 # Agent instructions
 
+## Project ownership
+
+CBC is an independent project, not an upstream-tracking fork. Treat OpenBuilds CONTROL as an abandoned historical baseline; implement against this project's plan rather than expecting upstream fixes or preserving future merge compatibility. Retain required attribution and licenses. See [project identity](README.md#independent-project) for the ownership and legacy-configuration boundary.
+
 ## Navigation and verification
 
 - For implementation order and milestone completion criteria, read `PLAN.md`.

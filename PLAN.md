@@ -6,7 +6,7 @@ Make this repository easy for a human or AI agent to navigate, change, and verif
 
 Decisions agreed during planning:
 
-- **Independent ownership.** Treat this as a new start; compatibility with future upstream changes is not a constraint.
+- **Independent ownership.** CBC is its own project, not an upstream-tracking fork. Treat OpenBuilds CONTROL as an abandoned historical baseline, with no dependency on upstream maintenance or synchronization; compatibility with future upstream changes is not a constraint. See [project identity](README.md#independent-project).
 - **TypeScript.** Use TypeScript for new and extracted modules, migrating in working increments.
 - **Feature preservation.** Preserve existing workflows initially. Inventory features before deciding which to retire.
 

@@ -1,6 +1,12 @@
 # ClosedBuilds CONTROL
 
-A CNC host for Grbl-family controllers, continuing the OpenBuilds CONTROL codebase as an independently maintained project. We are moving toward typed, testable modules while initially preserving existing workflows. See [PLAN.md](PLAN.md) for the roadmap and progress.
+A CNC host for Grbl-family controllers, developed independently from the OpenBuilds CONTROL codebase. We are moving toward typed, testable modules while initially preserving existing workflows. See [PLAN.md](PLAN.md) for the roadmap and progress.
+
+## Independent project
+
+ClosedBuilds CONTROL (CBC) is its own project, not an upstream-tracking fork or an official OpenBuilds release. We treat upstream OpenBuilds CONTROL as an abandoned historical baseline: development does not depend on upstream maintenance, fixes, releases, or future synchronization. Development, support, and release decisions belong to this project; compatibility with future upstream changes is not a goal.
+
+Inherited attribution and licensing remain in force. Remaining OpenBuilds identifiers, links, and update configuration are legacy migration work, not evidence of shared ownership or support. In particular, runtime update URLs still point upstream and must be replaced before independent releases are enabled.
 
 ## Development
 
@@ -14,16 +20,11 @@ Use Node 24.22.1 (`nvm use`) and npm 11.19.1, then `npm ci`, `npm run check`, an
 - [Verification status and manual scenarios](docs/testing.md)
 - [Agent instructions](AGENTS.md)
 
-## Historical upstream downloads
+## Historical upstream reference
 
-The links below point to upstream OpenBuilds releases, not releases of this fork. The runtime still contains inherited update URLs; independent release configuration is tracked in the plan.
+[OpenBuilds CONTROL releases](https://github.com/OpenBuilds/OpenBuilds-CONTROL/releases) are historical upstream artifacts, not CBC downloads or updates.
 
-#### Latest Version
-Click to download latest version:  [![Latest Version](https://img.shields.io/github/package-json/v/openbuilds/openbuilds-control.svg)](https://github.com/OpenBuilds/OpenBuilds-CONTROL/releases/latest)
-
-#### Older Versions
-Click to see all past releases:  [![Downloads](https://img.shields.io/github/downloads/openbuilds/sw-machine-drivers/total.svg)](https://github.com/OpenBuilds/OpenBuilds-CONTROL/releases)
-
+Historical upstream screenshot:
 ![Screenshot](https://raw.githubusercontent.com/OpenBuilds/OpenBuilds-CONTROL/master/docs/control.PNG)
 
 ## License
