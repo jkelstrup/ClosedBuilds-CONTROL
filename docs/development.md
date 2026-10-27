@@ -31,7 +31,8 @@ Forward Electron flags with `npm run dev -- --user-data-dir=<temporary-profile>`
 | Command | Current scope |
 | --- | --- |
 | `npm test` | Vitest in plain Node; toolchain, development watcher, and branding tests without application startup |
-| `npm run typecheck` | Strict TypeScript for `scripts/**/*.ts`, `tests/toolchain/**/*.ts`, and `vitest.config.mts` |
+| `npm run test:e2e` | Playwright Chromium preview-worker check with intercepted assets, without application startup |
+| `npm run typecheck` | Strict TypeScript for scripts, toolchain/browser tests, and their configurations; browser tests use a separate DOM-enabled config |
 | `npm run lint` | Type-aware ESLint for the same migrated TypeScript scope; warnings fail |
 | `npm run format:check` | Prettier for migrated scripts/tests, workflows, toolchain config, and `package.json` |
 | `npm run build` | Compile tooling to ignored `dist/checks/`; not a desktop package or browser bundle |
@@ -46,11 +47,17 @@ TypeScript 5.9.3 is deliberately below the type-aware ESLint plugin's `<6.1` sup
 
 The first migrated production code is installation tooling, not a machine module. Legacy root JavaScript (`index.js`, `grblStrings.js`, scan/sign/notarize scripts), application HTML/JavaScript, maintained viewer/worker and CNC mode, vendor candidates, historical samples, shipped resources, and inherited release automation are deliberately outside the new strict/format scope. This does **not** classify maintained files as vendor or establish their correctness. `node_modules/` and generated `dist/` are excluded from linting.
 
-When a module migrates, add its source/tests to the compiler, ESLint, Prettier, and Vitest scopes together and remove its replaced implementation. Do not mechanically format legacy files as part of unrelated behavior changes. Renderer and worker assets still use their original script tags/URLs; no browser bundler, renderer/worker output contract, Playwright suite, `dev:sim`, or packaging command exists yet. Establish those builds with their first executable consumer rather than shipping unused bundles.
+When a module migrates, add its source/tests to the compiler, ESLint, Prettier, and appropriate test runner scopes together and remove its replaced implementation. Do not mechanically format legacy files as part of unrelated behavior changes. Renderer and worker assets still use their original script tags/URLs; no browser bundler, renderer/worker output contract, `dev:sim`, or packaging command exists yet. Establish those builds with their first executable consumer rather than shipping unused bundles.
+
+### Isolated browser checks
+
+Playwright **1.64.1** is exact-pinned. Run `npx playwright install chromium` once after installation (Linux CI uses `npx playwright install --with-deps chromium`), then `npm run test:e2e`. Browser binaries are installed separately from `npm ci`; they are not application runtime dependencies. Browser execution stays outside the fast `npm run check`, but its TypeScript, lint, and formatting checks are included.
+
+`tests/e2e/preview.spec.ts` supplies an inert page at an intercepted `http://preview.test` origin. Only the existing worker URL and its absolute Three.js import are fulfilled from repository files; all other requests are aborted and fail the request inventory assertion. No HTTP server, Electron process, application entry point, Socket.IO connection, or device discovery starts. This checks real browser worker loading and a linear preview result, not the full renderer, packaged asset delivery, or controller behavior. Worker errors reject the test; Playwright's timeout bounds missing final replies, and each test disposes its browser context. Failed runs retain traces in ignored `test-results/` (inspect with `npx playwright show-trace <trace.zip>`).
 
 ### Pull-request verification and release boundary
 
-`.github/workflows/check.yml` runs on pull requests, pushes to `main`, and manual dispatch. Each Linux (`ubuntu-24.04`), macOS (`macos-15`), and Windows (`windows-2025`) job loads Node from `.nvmrc`, verifies the npm version declared in `package.json`, and runs `npm ci`, `npm ls --depth=0`, `npm run check`, and `npm run verify:install`. Installation scripts remain enabled so native dependency loading is actually exercised. The npm cache stores download data, not `node_modules`; each job installs from the lockfile.
+`.github/workflows/check.yml` runs on pull requests, pushes to `main`, and manual dispatch. Each Linux (`ubuntu-24.04`), macOS (`macos-15`), and Windows (`windows-2025`) job loads Node from `.nvmrc`, verifies the npm version declared in `package.json`, and runs `npm ci`, `npm ls --depth=0`, `npm run check`, and `npm run verify:install`. Linux additionally installs Chromium and runs `npm run test:e2e`. Installation scripts remain enabled so native dependency loading is actually exercised. The npm cache stores download data, not `node_modules`; each job installs from the lockfile.
 
 Jobs have read-only repository permissions, do not retain checkout credentials, and require no release secrets. They never import `index.js`, launch the application, open controller ports, sign, package, or publish. The runner matrix is a verification target, not a statement of desktop/platform support; record actual hosted results in [testing.md](testing.md). A failing command fails its job; configure required status checks in repository branch protection separately if merge blocking is desired.
 

@@ -48,3 +48,11 @@ jobs:
 
       - name: Verify native loading in Node and Electron
         run: npm run verify:install
+
+      - name: Install Chromium for isolated browser checks
+        if: runner.os == 'Linux'
+        run: npx playwright install --with-deps chromium
+
+      - name: Run isolated browser checks
+        if: runner.os == 'Linux'
+        run: npm run test:e2e

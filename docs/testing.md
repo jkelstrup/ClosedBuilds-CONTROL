@@ -31,7 +31,16 @@ Evidence recorded in the `build/typescript-checks` working branch, on macOS arm6
 - `npm run verify:install`: compiled TypeScript installation check passes in host Node and Electron's Node mode, without launching CONTROL or opening/listing ports.
 - `npm ci` and `npm ls --depth=0`: passed with the updated lockfile; the same 16 inherited audit findings remain. After checks, `npm run dev -- --user-data-dir=<temporary-profile>` started successfully, HTTP on port 3000 returned 200, and the user confirmed the app appeared to work. This is a limited startup smoke check, not machine or full desktop workflow verification.
 
-See [commands, output format, and exclusions](development.md#incremental-typescript-and-local-checks) before selecting checks. These results are tooling evidence only, not controller/application characterization. Playwright, renderer/worker builds, hosted CI execution/failure probes, packaging, and the broader platform matrix remain pending.
+See [commands, output format, and exclusions](development.md#incremental-typescript-and-local-checks) before selecting checks. These results are tooling evidence only, not controller/application characterization. Renderer/worker builds, hosted CI execution/failure probes, packaging, and the broader platform matrix remain pending. The subsequent Playwright slice is recorded below.
+
+### Isolated browser checks (milestone 2)
+
+Evidence on `build/playwright-preview-check`, macOS arm64, Node 24.22.1/npm 11.19.1, Playwright 1.64.1, bundled Chromium, no controllers:
+
+- `npx playwright install chromium` and `npm run test:e2e` pass. A real web worker loads the existing preview script and its Three.js import using the production URLs; `G21`/`G90` plus a linear move produces a 5-unit path ending at X3/Y4/Z0. Requests are intercepted from a two-asset allowlist; no application startup or listening network services are involved.
+- `npm run check` passes all 18 existing tests and the expanded formatting/lint/type checks. Browser execution is separate from this fast aggregate. Linux CI now installs Chromium and runs `test:e2e`; hosted execution remains unverified.
+- `npm ci`, `npm ls --depth=0`, and `npm run verify:install` pass with the updated lockfile; native loading passes in host Node and Electron's Node mode. The same 16 inherited audit findings remain.
+- This is narrow preview-worker evidence, not full viewer/UI, server delivery, packaged paths, arcs/large-file behavior, simulation, or physical-machine verification. See [browser setup and isolation](development.md#isolated-browser-checks).
 
 ### Pull-request CI slice (milestone 2)
 
