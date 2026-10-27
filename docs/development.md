@@ -4,15 +4,37 @@
 
 The repository is an independently maintained continuation, but application identity and release infrastructure still use inherited OpenBuilds values. [PLAN.md](../PLAN.md) separates mapping from toolchain modernization; [architecture.md](architecture.md) describes what actually starts today.
 
-- `package.json` defines `npm run run-local` as `electron .`. After dependencies are installed, this is the desktop launch entry point.
+- `npm run dev` launches `electron .`; `npm start` and `npm run run-local` retain equivalent desktop entry points. None of the verification commands launch CONTROL.
 - Use Node **24.22.1** (`nvm use`, using `.nvmrc`) and npm **11.19.1**, also declared in `package.json`. Install with `npm ci` from the checked-in lockfile. Its `postinstall` runs `electron-builder install-app-deps` and may download/rebuild native dependencies. Do not use `--ignore-scripts` for a complete installation.
 - Run `npm run verify:install` after installing. This loads serialport's native binding and checks split-line framing in host Node and in Electron's Node mode. It never imports the application, enumerates/opens ports, or starts servers/windows/updaters. This is an installation check, not an application behavior suite.
-- The first verified combination is macOS arm64, Node 24.22.1/npm 11.19.1, Electron **23.3.13** (embedded Node 18.12.1), serialport **12.0.0**, and native bindings **12.0.1**. The native package uses Node-API; loading under both runtimes passed. Native source compilation, other platforms, desktop startup, and packaging remain unverified.
+- The first verified combination is macOS arm64, Node 24.22.1/npm 11.19.1, Electron **23.3.13** (embedded Node 18.12.1), serialport **12.0.0**, and native bindings **12.0.1**. The native package uses Node-API; loading under both runtimes passed. A limited launch/browser UI smoke check also passed; native source compilation, other platforms, full desktop workflows, and packaging remain unverified.
 - Electron stays on the final 23.x patch within the inherited major for this bounded installation baseline, **not** as a supported/security-current Electron recommendation. Major Electron/native/build upgrades remain a dedicated milestone-2 change. Other inherited dependency ranges are resolved by the lockfile. `electron-builder-notarize` is pinned to 1.5.2 instead of `latest`; direct imports of `@electron/notarize` and `@serialport/parser-readline` are now declared. npm `overrides` replaces the previously ineffective Yarn `resolutions` for notarize 2.3.2.
 - `npm audit` reports **16 affected packages (15 high, 1 critical)** in this initial lock. These include Electron, updater/build tooling, `ip`, and transitive `tar`. Do not run `npm audit fix --force` blindly or treat this baseline as release-ready. Resolve these in targeted modernization/security work with runtime evidence. Inherited Node 20 CI and release automation have not yet been modernized.
-- `npm start` and `npm test` print errors but exit successfully. There is no aggregate check, controller simulator, or established automated application test suite yet. See [testing.md](testing.md).
+- `npm run check` runs formatting, lint, strict type checking, deterministic toolchain tests, and the tooling build. Machine behavior tests and a controller simulator do not exist yet. See [testing.md](testing.md).
 
 Do not launch the app merely to inspect architecture: startup opens network listeners, polls serial ports, and can fetch upstream update data. Use a trusted isolated network, disconnected controllers, and a disposable profile for future runtime checks. Do not run `scan.js`, `pi-install.sh`, signing scripts, or publishing CI as verification; they scan networks, modify systems, or access release infrastructure.
+
+## Incremental TypeScript and local checks
+
+| Command | Current scope |
+| --- | --- |
+| `npm test` | Vitest in plain Node; toolchain compatibility/failure tests only |
+| `npm run typecheck` | Strict TypeScript for `scripts/**/*.ts`, `tests/toolchain/**/*.ts`, and `vitest.config.mts` |
+| `npm run lint` | Type-aware ESLint for the same migrated TypeScript scope; warnings fail |
+| `npm run format:check` | Prettier for migrated scripts/tests, toolchain config, and `package.json` |
+| `npm run build` | Compile tooling to ignored `dist/checks/`; not a desktop package or browser bundle |
+| `npm run check` | All five checks above, stopping at the first failure |
+| `npm run verify:install` | Build, then run the compiled installation smoke check in host Node and Electron's Node mode |
+
+TypeScript 5.9.3 is deliberately below the type-aware ESLint plugin's `<6.1` support ceiling. Tool versions are exact-pinned in `package.json` and the npm lock. The compiler uses `NodeNext` resolution/output and an ES2022 target; with this package's unchanged CommonJS identity, ordinary `.ts` modules emit CommonJS `.js`. `.mts` is reserved for ESM tooling configuration. `strict`, unchecked index access, and exact optional-property checks are enabled. Third-party declaration internals use `skipLibCheck`; application/tooling source is still checked. Node types target the host toolchain; code executed in Electron's embedded Node must also stay compatible with Node 18, as the installation smoke check verifies for its current imports.
+
+`scripts/verify-install.ts` emits to `dist/checks/scripts/verify-install.js`; TypeScript copies its imported package manifest to `dist/checks/package.json`. The source is not executed directly. Existing CommonJS callers can use `require()` on emitted CommonJS modules after building; the toolchain suite exercises this with a temporary fixture. No legacy application entry point currently imports the generated output.
+
+### Checked scope and migration exclusions
+
+The first migrated production code is installation tooling, not a machine module. Legacy root JavaScript (`index.js`, `grblStrings.js`, scan/sign/notarize scripts), application HTML/JavaScript, maintained viewer/worker and CNC mode, vendor candidates, historical samples, shipped resources, and inherited release automation are deliberately outside the new strict/format scope. This does **not** classify maintained files as vendor or establish their correctness. `node_modules/` and generated `dist/` are excluded from linting.
+
+When a module migrates, add its source/tests to the compiler, ESLint, Prettier, and Vitest scopes together and remove its replaced implementation. Do not mechanically format legacy files as part of unrelated behavior changes. Renderer and worker assets still use their original script tags/URLs; no browser bundler, renderer/worker output contract, Playwright suite, `dev:sim`, packaging command, or PR CI is claimed by this slice. Establish those builds with their first executable consumer rather than shipping unused bundles.
 
 ### Troubleshooting entry points
 

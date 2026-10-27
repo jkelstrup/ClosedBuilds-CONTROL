@@ -8,7 +8,7 @@
 - For feature entry points and retained consumers, read `docs/features.md`.
 - For socket/HTTP, status, saved-data, or macro changes, read `docs/contracts.md`.
 - For setup, packaging, vendor exclusions, or resource moves, read `docs/development.md`.
-- For selecting checks and reporting verification gaps, read `docs/testing.md`. `npm test` and `npm start` are placeholders, not evidence of correctness.
+- For selecting checks and reporting verification gaps, read `docs/testing.md`. `npm run check` covers migrated tooling only; `npm start` launches infrastructure, not verification.
 - Importing `index.js` starts infrastructure; inspect it statically until a callable test seam exists. Application startup can expose machine control over the network. Keep physical controllers disconnected during development checks.
 
 ## Git workflow
