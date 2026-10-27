@@ -10,7 +10,7 @@ Decisions agreed during planning:
 - **TypeScript.** Use TypeScript for new and extracted modules, migrating in working increments.
 - **Feature preservation.** Preserve existing workflows initially. Inventory features before deciding which to retire.
 
-This is an implementation roadmap, not a description of architecture or commands already available. All milestones below are pending. Repository inspection informed the plan; installation, application startup, packaging, and hardware behavior have not been validated during planning.
+This is an implementation roadmap, not a description of architecture or commands already available. Milestone 1 is complete as a source-inspection baseline; milestones 2–6 are pending. Installation, application startup, packaging, and hardware behavior have not been validated. See [verification status](docs/testing.md) for the evidence and remaining gaps.
 
 ## What makes changes difficult today
 
@@ -87,15 +87,17 @@ Each milestone should land as small, reviewable changes. Follow dependencies bel
 
 **Purpose:** Give the next agent a reliable starting point and make retained behavior explicit.
 
-- [ ] Expand `README.md` with the project purpose, current development entry point (`npm run run-local`), and links to development and architecture documentation. Record prerequisites only after verifying them.
-- [ ] Document the actual startup path, HTTP/Socket.IO flow, serial/TCP flow, renderer entry points, worker loading, and persistence locations in `docs/architecture.md`.
-- [ ] Build a feature inventory covering desktop and browser access, mobile jog, USB/TCP, firmware variants, jobs and recovery, probing/calibration, settings, G-code/JavaScript macros, preview, flashing, Interface USB preparation, and update/install workflows. Record entry points, known consumers, and verification status.
-- [ ] Inventory socket events, HTTP routes, status fields, localStorage keys, macro globals, and packaged resource paths. Treat `api.doc` as an example to reconcile against code, not an authoritative specification.
-- [ ] Keep root `AGENTS.md` short: navigation pointers, executable verification entry points as they become available, and existing workflow rules. Add scoped instructions only where a subtree has distinct constraints. Give each pointer an explicit trigger, such as “For controller or streaming changes, read …”.
-- [ ] Classify first-party, customized third-party, unmodified vendor, generated, binary, and historical files. Specifically inspect `app/lib/3dview/`, the viewer worker, and the Ace CNC mode before configuring exclusions.
-- [ ] Record independent-project configuration to migrate: repository/support URLs, update feeds, application identity, signing, and user-data location. Preserve inherited license and attribution requirements.
+- [x] Expand `README.md` with the project purpose, current development entry point (`npm run run-local`), and links to development and architecture documentation. Record prerequisites only after verifying them. See [README.md](README.md) and [setup status](docs/development.md#current-setup-status).
+- [x] Document the actual startup path, HTTP/Socket.IO flow, serial/TCP flow, renderer entry points, worker loading, and persistence locations in [docs/architecture.md](docs/architecture.md).
+- [x] Build a feature inventory covering desktop and browser access, mobile jog, USB/TCP, firmware variants, jobs and recovery, probing/calibration, settings, G-code/JavaScript macros, preview, flashing, Interface USB preparation, and update/install workflows. Record entry points, known consumers, and verification status. See [docs/features.md](docs/features.md).
+- [x] Inventory socket events, HTTP routes, status fields, localStorage keys, macro globals, and packaged resource paths. Treat `api.doc` as an example to reconcile against code, not an authoritative specification. See [docs/contracts.md](docs/contracts.md) and [packaged paths](docs/development.md#packaged-path-interface).
+- [x] Keep root `AGENTS.md` short: navigation pointers, executable verification entry points as they become available, and existing workflow rules. Add scoped instructions only where a subtree has distinct constraints. Give each pointer an explicit trigger, such as “For controller or streaming changes, read …”. See [AGENTS.md](AGENTS.md); no extra scoped files needed yet.
+- [x] Classify first-party, customized third-party, unmodified vendor, generated, binary, and historical files. Specifically inspect `app/lib/3dview/`, the viewer worker, and the Ace CNC mode before configuring exclusions. See [classification and provenance gaps](docs/development.md#source-and-resource-classification); vendor candidates are not asserted to be unmodified.
+- [x] Record independent-project configuration to migrate: repository/support URLs, update feeds, application identity, signing, and user-data location. Preserve inherited license and attribution requirements. See [configuration inventory](docs/development.md#independent-project-configuration-to-migrate).
 
 **Complete when:** A fresh session can locate a feature's entry point, state owner, dependencies, and current verification method from the documentation. Every inventoried feature is explicitly retained or marked for a later decision; unknown behavior is labeled unknown.
+
+**Baseline evidence:** Documentation links and literal socket-event/HTTP-route/localStorage inventories were cross-checked against repository files; whitespace checks passed. Application behavior is unchanged. All feature runtime/hardware checks remain explicitly unverified in `docs/features.md` and `docs/testing.md`. Next: milestone 2, starting with toolchain compatibility and a locked install.
 
 ### 2. Make installation and checks trustworthy
 
@@ -202,3 +204,5 @@ For each implementation task, record:
 5. **Completion:** Replaced code removed where applicable, documentation updated, and the corresponding checklist item checked with a reference to the change.
 
 Keep this file as the roadmap. Put current architecture in module documentation, commands in `package.json`, and executable behavior in tests so the plan does not become a second, stale source of truth.
+
+For consequential architectural decisions and reversals, follow the [ADR process](docs/adr/README.md). The agreed TypeScript migration direction is recorded in [ADR 0001](docs/adr/0001-incremental-typescript-migration.md); acceptance records intent, not implementation completion.
