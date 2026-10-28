@@ -209,27 +209,6 @@ function initSocket() {
     printLogModern(icon, source, string, printLogCls)
   });
 
-  socket.on('updateready', function(data) {
-    // 0 = not connected
-    // 1 = Connected, but not Playing yet
-    // 2 = Connected, but not Playing yet
-    // 3 = Busy Streaming GCODE
-    // 4 = Paused
-    // 5 = Alarm State
-    // 6 = Firmware Upgrade State
-    if (laststatus.comms.connectionStatus < 3 && !continuousJogRunning) {
-      $('#availVersion').html(data)
-      getReleaseStats()
-      getChangelog();
-      Metro.dialog.open('#downloadUpdate')
-    }
-
-  });
-
-  socket.on('updateprogress', function(data) {
-    $('#downloadprogress').html(data + "%");
-  });
-
   socket.on('fluidncConfig', function(data) {
     console.log(data);
     var fluidnceditor = ace.edit("fluidnceditor");

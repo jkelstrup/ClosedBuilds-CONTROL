@@ -1,8 +1,5 @@
-import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { runInNewContext } from 'node:vm';
-import { EventEmitter } from 'node:events';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { Configuration } from 'electron-builder';
 import config from '../electron-builder.unsigned.json';
 import { unsignedPackageInvocation } from './unsigned-package.js';
@@ -53,40 +50,5 @@ describe('unsigned packaging boundary', () => {
       CSC_IDENTITY_AUTO_DISCOVERY: 'false',
     });
     expect(environment.CSC_LINK).toBe('secret');
-  });
-
-  it.each([false, true])(
-    'only enables the legacy updater outside verification packages (marker: %s)',
-    (unsigned) => {
-      const source = readFileSync('index.js', 'utf8');
-      const setup = source.slice(
-        source.indexOf('var updateIsDownloading = false;'),
-        source.indexOf('  var uploadsDir ='),
-      );
-      const on = vi.fn();
-      const requireModule = vi.fn((name: string) => {
-        if (name === './package') return { cbcUnsignedVerification: unsigned };
-        if (name === 'electron-updater' && !unsigned)
-          return { autoUpdater: { on } };
-        throw new Error(`Unexpected import: ${name}`);
-      });
-      // The next uploads conditional is excluded; no startup/import of index.js.
-      runInNewContext(
-        `var autoUpdater;\n${setup.slice(0, setup.lastIndexOf('if (isElectron())'))}`,
-        { isElectron: () => true, require: requireModule, debug_log: vi.fn() },
-      );
-      expect(on.mock.calls.length > 0).toBe(!unsigned);
-    },
-  );
-
-  it('ignores applyUpdate when an unsigned build has no updater', () => {
-    const source = readFileSync('index.js', 'utf8');
-    const handler = source.slice(
-      source.indexOf('  socket.on("applyUpdate"'),
-      source.indexOf('  socket.on("downloadUpdate"'),
-    );
-    const socket = new EventEmitter();
-    runInNewContext(handler, { socket, autoUpdater: undefined });
-    expect(() => socket.emit('applyUpdate')).not.toThrow();
   });
 });

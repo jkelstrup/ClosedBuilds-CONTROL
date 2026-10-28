@@ -1162,7 +1162,7 @@
         </div>
 
         <div id="updatePanel" style="display: none;">
-          <div id="updateconsole">Click "Download Updates" above</div>
+          <div id="updateconsole">CBC automatic updates are not configured.</div>
         </div>
         <div id="troubleshootingPanel" style="display: none;">
           <div class="grid p-0 m-0">
@@ -1399,10 +1399,10 @@
 
                 <div class="card">
                   <div class="card-header  p-1 m-0">
-                    <i class="fas fa-fw fa-history"></i>&nbsp;Changelog
+                    <i class="fas fa-fw fa-info-circle"></i>&nbsp;Application updates
                   </div>
                   <div class="card-content" style="height: calc(100vh - 680px); min-height: 120px; overflow-x: auto;">
-                    <div id="changelog" class="text-small"></div>
+                    <div id="applicationUpdateStatus" class="text-small">CBC automatic updates are not configured. This application does not check for, download, or install upstream OpenBuilds CONTROL releases.</div>
                   </div>
                 </div>
 
@@ -1467,27 +1467,6 @@
     </ul>
 
     <div id="hiddendivs" style="display:none;">
-
-      <div class="dialog dark" id="downloadUpdate" data-role="dialog" data-overlay-click-close="false" data-to-top="true">
-        <div class="dialog-title">Update Ready</div>
-        <div class="dialog-content">
-          CBC v<span id="availVersion">1.0.100</span> has finished downloading and is ready to be installed!<br>
-          <small>Note that proceeding will:
-            <ul>
-              <li>Stop any running jobs</li>
-              <li>Shut down this instance of CBC</li>
-              <li>Launch the installer for the new version</li>
-            </ul>
-          </small>
-          <small>You may want to wait until your machine is idle, and it it's a convenient time for you to do this, before continuing</small>
-          <p id="changelogupdate" class="text-small"></p>
-          This release has already been downloaded <span id="releaseStats">several</span> times since its release on <span id="releaseDate"></span>
-        </div>
-        <div class="dialog-actions ">
-          <button class="button js-dialog-close">Not right now</button>
-          <button class="button success js-dialog-close" onclick="socket.emit('applyUpdate', true)">OK, Proceed with Update</button>
-        </div>
-      </div>
 
       <div class="dialog dark" data-overlay-click-close="false" data-role="dialog" data-to-top="true" id="jogWidgetDialog">
         <div class="dialog-title"><i class="fas fa-mobile-alt"></i> Jog Widget</div>
@@ -1888,7 +1867,6 @@
 
   <script type="text/javascript" src="/generated/renderer.js"></script>
   <script type="text/javascript" src="js/main.js"></script>
-  <script type="text/javascript" src="js/updates.js"></script>
   <script type="text/javascript" src="js/ui.js"></script>
 
   <script type="text/javascript" src="js/grbl-settings-defaults.js"></script>

@@ -28,7 +28,7 @@ app/jog/index.html (mobile jog)
 
 ### Startup and shutdown
 
-`npm run run-local` builds assets and invokes Electron, which loads `index.js` via `package.json.main`. At module load, the implementation constructs Express/Socket.IO, reads root TLS files, starts HTTPS on 3001 and HTTP on the selected port, configures updater listeners, creates the upload directory, lists serial ports, and installs polling. This happens before the Electron single-instance/ready handling later in the file. Requiring this file in a test is not safe isolation. The separate unsigned packaging config embeds `cbcUnsignedVerification: true`; only that variant skips electron-updater initialization, and update socket handlers do nothing without an updater. This does not disable firmware/network activity or change machine behavior.
+`npm run run-local` builds assets and invokes Electron, which loads `index.js` via `package.json.main`. At module load, the implementation constructs Express/Socket.IO, reads root TLS files, starts HTTPS on 3001 and HTTP on the selected port, creates the upload directory, lists serial ports, and installs polling. This happens before the Electron single-instance/ready handling later in the file. Requiring this file in a test is not safe isolation. Application updates are disabled in every variant: no updater dependency or feed is loaded, and legacy update socket requests only report that CBC automatic updates are not configured. The separate unsigned packaging config still embeds `cbcUnsignedVerification: true` for artifact verification. This does not disable firmware/network activity or change machine behavior.
 
 HTTP initially uses `WEB_PORT` or the fallback list in `config.webPorts`; `httpServerError` retries through `config.nextWebPort`. HTTP explicitly binds `0.0.0.0`. HTTPS has no explicit host restriction. Both carry the same Socket.IO server. Express serves `app/` as its static root, so `/` loads the full UI, `/jog/` loads mobile jog, and `/socket.io/socket.io.js` comes from Socket.IO.
 
@@ -69,7 +69,7 @@ Mobile jog loads a subset of those same scripts. Both full/mobile HTML load `/ge
 - `uploadsDir` is `electronApp.getPath('userData') + '/upload/'` in Electron. Multer uses it for job/custom-firmware uploads. Formidable `/upload` uses its own temporary file handling. `uploadedgcode` and `uploadedworkspace` are in-memory values, not durable job storage.
 - Firmware operations combine root binary assets, downloaded/uploaded images, platform executables, and ASAR path rewriting. Interface preparation writes files and optional Wi-Fi credentials to a user-selected drive.
 - `scanForTelnetDevices` scans a caller-provided range on port 23. `scan.js` is a separate script that immediately scans the local subnet; it is not the server's entry point.
-- UI startup can fetch upstream version/changelog information and request updater downloads. No isolated, offline development mode exists yet.
+- Upstream application version/changelog/statistics fetches and automatic downloads/installations have been removed. The UI explains that CBC automatic updates are not configured. Interface firmware downloads and other network activity remain; this is not an offline mode.
 
 ## First extraction seam
 

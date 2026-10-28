@@ -35,14 +35,14 @@ Every application command listener below is in the `io.on('connection')` block i
 | Firmware | `flashGrbl`, `flashGrblHal`, `flashInterface`, `flashBLOX` | Port/file and variant-specific custom-image/erase options; inspect current flasher's emitted object before changing |
 | Interface drive | `openInterfaceDir`, `writeInterfaceUsbDrive` | Native directory selection; `{drive, controller, ssid, psk}` copies resources and optional Wi-Fi configuration |
 | Desktop | `openFile`, `gpuinfo`, `minimisetotray`, `minimize`, `maximize`, `fullscreen`, `quit` | Native dialogs/window/process operations, not independent browser implementations |
-| Updater | `applyUpdate`, `downloadUpdate` | Quit/install or check/download; desktop updater instance. Both are no-ops in unsigned verification packages, which do not initialize an updater |
+| Updater (disabled) | `applyUpdate`, `downloadUpdate` | Both only reply to the requesting socket with `updatedata: {command: "autoupdate", response: "CBC automatic updates are not configured."}` in every variant; no check, download, install or quit |
 | External links | `openbuilds`, `openbuildspartstore`, `carveco`, `fabber`, `lightburn`, `vectric`, `opencam`, `opendocs`, `openforum` | Electron external browser actions |
 
 No literal active UI emitters were found for some listeners (including `jogTo`, `setZero`, `gotoZero`, `setPosition`, `probe`, debug/SD commands, `resetMachine`, and `quit`). Their presence is not proof of a supported UI path; macros or external consumers may still rely on them. Current UI often generates equivalent G-code through `runCommand`/`runJob` instead.
 
 ### Host → clients
 
-All listed emissions are in `index.js` via `io.sockets.emit`, broadcasting to clients, not scoped per requester.
+Unless noted otherwise, listed emissions are in `index.js` via `io.sockets.emit`, broadcasting to clients, not scoped per requester.
 
 | Group | Events | Payload / consumer |
 | --- | --- | --- |
@@ -51,7 +51,7 @@ All listed emissions are in `index.js` via `io.sockets.emit`, broadcasting to cl
 | Job/file | `gcodeupload`, `queueCount`, `jobComplete` | File data/name; `[remaining, total]`; completion metadata/timestamps. `websocket.js` updates UI/history/recovery marker |
 | Controller feedback | `data`, `ok`, `prbResult`, `laserTest`, `errorsCleared` | Log response object, acknowledgement, probe result, laser state, alarm-clear notification. `prbResult` used by holefinder/sample macro; not all events have an in-repo listener |
 | Notifications | `toastError`, `toastErrorAlarm`, `interfaceDrive`, `interfaceOutdated`, `progStatus` | Error messages, selected drive, firmware notice, flashing port/string/code; `websocket.js` |
-| Updates | `updatedata`, `updateprogress`, `updateready` | Update log/progress/version; `websocket.js` |
+| Updates (disabled) | `updatedata` | Disabled-update response only, scoped to requester; `websocket.js` logs it. `updateprogress` and `updateready` emissions/listeners and the installation prompt are removed |
 | Activation | `activate` | Request hostname; no matching literal in-repo listener found |
 
 The renderer also listens for Socket.IO lifecycle `connect`/`disconnect`, and an `integrationpopup` event for which no matching literal host emission was found. Those asymmetries need characterization, not automatic deletion.

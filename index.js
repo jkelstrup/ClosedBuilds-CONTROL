@@ -228,86 +228,8 @@ var forceQuit
 var appIcon = null,
   jogWindow = null,
   mainWindow = null
-var autoUpdater
-
-
-var updateIsDownloading = false;
-if (isElectron() && require('./package').cbcUnsignedVerification !== true) {
-  autoUpdater = require("electron-updater").autoUpdater
-  var availversion = '0.0.0'
-
-  autoUpdater.on('checking-for-update', () => {
-    var string = 'Starting update... Please wait';
-    var output = {
-      'command': 'autoupdate',
-      'response': string
-    }
-    io.sockets.emit('updatedata', output);
-  })
-  autoUpdater.on('update-available', (ev, info) => {
-    updateIsDownloading = true;
-    var string = "Starting Download: v" + ev.version;
-    availversion = ev.version
-    var output = {
-      'command': 'autoupdate',
-      'response': string
-    }
-    io.sockets.emit('updatedata', output);
-    debug_log(JSON.stringify(ev))
-  })
-  autoUpdater.on('update-not-available', (ev, info) => {
-    var string = 'Update not available. Installed version: ' + require('./package').version + " / Available version: " + ev.version + ".\n";
-    if (require('./package').version === ev.version) {
-      string += "You are already running the latest version!"
-    }
-    var output = {
-      'command': 'autoupdate',
-      'response': string
-    }
-    io.sockets.emit('updatedata', output);
-    debug_log(JSON.stringify(ev))
-  })
-  autoUpdater.on('error', (ev, err) => {
-    if (err) {
-      var string = 'Error in auto-updater: \n' + err.split('SyntaxError')[0];
-    } else {
-      var string = 'Error in auto-updater';
-    }
-    var output = {
-      'command': 'autoupdate',
-      'response': string
-    }
-    io.sockets.emit('updatedata', output);
-  })
-  autoUpdater.on('download-progress', (ev, progressObj) => {
-    updateIsDownloading = true;
-    var string = 'Download update ... ' + ev.percent.toFixed(1) + '%';
-    debug_log(string)
-    var output = {
-      'command': 'autoupdate',
-      'response': string
-    }
-    io.sockets.emit('updatedata', output);
-    io.sockets.emit('updateprogress', ev.percent.toFixed(0));
-  })
-
-  autoUpdater.on('update-downloaded', (info) => {
-    var string = "New update ready";
-    var output = {
-      'command': 'autoupdate',
-      'response': string
-    }
-    io.sockets.emit('updatedata', output);
-    io.sockets.emit('updateready', availversion);
-    // repeat every minute
-    setTimeout(function() {
-      io.sockets.emit('updateready', availversion);
-    }, 1000 * 60 * 60 * 8) // 8hrs before alerting again if it was snoozed
-    updateIsDownloading = false;
-  });
-} else {
-  debug_log("AutoUpdater disabled outside Electron or in an unsigned verification package")
-}
+// CBC automatic updates are not configured. Do not load an updater or an
+// inherited feed; project-owned release infrastructure must be established first.
 
 if (isElectron()) {
   var uploadsDir = electronApp.getPath('userData') + '/upload/';
@@ -886,19 +808,15 @@ io.on("connection", function(socket) {
     electronApp.exit(0);
   });
 
-  socket.on("applyUpdate", function(data) {
-    if (autoUpdater) autoUpdater.quitAndInstall();
-  })
-
-  socket.on("downloadUpdate", function(data) {
-    if (!updateIsDownloading) {
-      if (typeof autoUpdater !== 'undefined') {
-        autoUpdater.checkForUpdates();
-      } else {
-        debug_log("autoUpdater not found")
-      }
-    }
-  })
+  // Retain old client event names, but never check, download or install updates.
+  function updatesUnavailable() {
+    socket.emit('updatedata', {
+      command: 'autoupdate',
+      response: 'CBC automatic updates are not configured.'
+    });
+  }
+  socket.on("applyUpdate", updatesUnavailable);
+  socket.on("downloadUpdate", updatesUnavailable);
 
   socket.on("flashGrbl", function(data) {
 

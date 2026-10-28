@@ -10,7 +10,7 @@ describe('CBC branding (without starting CONTROL)', () => {
     const source = readFileSync('app/js/main.js', 'utf8');
     const titleFunction = source.slice(
       source.indexOf('function setWindowTitle('),
-      source.indexOf('function getReleaseStats('),
+      source.indexOf('$(document).ready('),
     );
     const document = { title: '' };
     const status = {

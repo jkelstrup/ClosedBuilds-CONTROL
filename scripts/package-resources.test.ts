@@ -21,6 +21,11 @@ it.each([
     body: 'provider: github',
     error: 'Development update feed leaked into package',
   },
+  {
+    file: 'node_modules/electron-updater/package.json',
+    body: '{"name":"electron-updater"}',
+    error: 'Disabled application updater leaked into package',
+  },
 ])('rejects unsafe artifact contents: $file', async ({ file, body, error }) => {
   const root = await mkdtemp(join(tmpdir(), 'cbc-package-inspection-'));
   const source = join(root, 'fixture');

@@ -57,6 +57,10 @@ export async function verifyPackageResources(
     !entries.includes('/dev-app-update.yml'),
     'Development update feed leaked into package',
   );
+  assert(
+    !entries.some((entry) => entry.includes('/node_modules/electron-updater')),
+    'Disabled application updater leaked into package',
+  );
   const manifest: unknown = JSON.parse(
     extractFile(archive, 'package.json').toString(),
   );

@@ -28,7 +28,6 @@
   "dependencies": {
     "@serialport/parser-readline": "12.0.0",
     "detect-rpi": "^1.4.0",
-    "electron-updater": "^5.2.1",
     "evilscan": "^1.9.1",
     "express": "^4.18.1",
     "formidable": "^2.1.1",
@@ -68,12 +67,7 @@
   ],
   "repository": "https://github.com/OpenBuilds/OpenBuilds-CONTROL",
   "build": {
-    "publish": [
-      {
-        "provider": "github",
-        "vPrefixedTagName": true
-      }
-    ],
+    "publish": null,
     "afterSign": "./notarize.js",
     "mac": {
       "icon": "build/icon.icns",

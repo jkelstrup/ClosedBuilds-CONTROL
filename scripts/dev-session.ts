@@ -2,12 +2,7 @@ import { type ChildProcess } from 'node:child_process';
 import { watch, type FSWatcher } from 'node:fs';
 import { join } from 'node:path';
 
-const mainFiles = new Set([
-  'index.js',
-  'grblStrings.js',
-  'package.json',
-  'dev-app-update.yml',
-]);
+const mainFiles = new Set(['index.js', 'grblStrings.js', 'package.json']);
 
 export function startDevSession(
   root: string,

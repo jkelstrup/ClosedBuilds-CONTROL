@@ -9,7 +9,7 @@ test('built renderer bridge supports the legacy title callback in full and mobil
   const main = await readFile('app/js/main.js', 'utf8');
   const callback = main.slice(
     main.indexOf('function setWindowTitle('),
-    main.indexOf('function getReleaseStats('),
+    main.indexOf('$(document).ready('),
   );
   const unexpected: string[] = [];
   await context.route('**/*', async (route) => {
