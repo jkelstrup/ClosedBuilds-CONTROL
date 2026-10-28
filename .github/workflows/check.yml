@@ -62,3 +62,31 @@ jobs:
 
       - name: Verify packaged resources without application startup
         run: npm run verify:package
+
+      # Hosted runners are disposable and have no physical controllers. Keep
+      # this explicit opt-in separate from checks that never start the app.
+      - name: Check source desktop startup (Linux virtual display)
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum npm run test:desktop
+        env:
+          CBC_DESKTOP_SMOKE: '1'
+
+      - name: Check packaged desktop startup (Linux virtual display)
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum npm run test:desktop
+        env:
+          CBC_DESKTOP_SMOKE: '1'
+          CBC_DESKTOP_PACKAGE: '1'
+
+      - name: Check source desktop startup
+        if: runner.os != 'Linux'
+        run: npm run test:desktop
+        env:
+          CBC_DESKTOP_SMOKE: '1'
+
+      - name: Check packaged desktop startup
+        if: runner.os != 'Linux'
+        run: npm run test:desktop
+        env:
+          CBC_DESKTOP_SMOKE: '1'
+          CBC_DESKTOP_PACKAGE: '1'

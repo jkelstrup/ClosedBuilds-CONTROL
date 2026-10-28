@@ -163,6 +163,16 @@ Evidence on `build/modernize-verification-actions`, macOS arm64, Node 24.22.1/np
 - `npm run check` passes formatting (including workflow YAML), lint, strict types, all **53 tests**, and builds. No dependencies, lockfile, application runtime, runner targets or verification commands changed; read-only permissions, disabled credential persistence and the explicit npm cache remain intact.
 - Hosted execution of these new action versions, cache restore/save and removal of the prior Node 20 annotations remain **unverified**. The earlier green three-platform run used v4; local checks cannot establish GitHub runner compatibility. No package/startup or hardware evidence is added by this change. Milestone 2 remains open for platform startup/support and release-ownership gaps.
 
+### Cross-platform desktop startup wiring (milestone 2)
+
+Evidence on `build/cross-platform-desktop-smoke`, macOS arm64, Node 24.22.1/npm 11.19.1. No application startup, controller access, CI dispatch, signing or publishing:
+
+- The separate desktop check now permits opted-in macOS/Linux runs and Windows runs only on disposable GitHub-hosted runners. Windows retains its normal tray-first startup; the test opens the UI using the existing `/activate` HTTP route. No runtime implementation or socket/status contracts changed.
+- CI now explicitly opts into source and unsigned-package startup on each existing runner, using Xvfb on Linux. `CBC_DESKTOP_PACKAGE=1` resolves the executable beside the sole unsigned archive and rejects absent/ambiguous packages or a missing executable. The explicit `CBC_PACKAGED_EXECUTABLE` override remains supported. No artifacts are uploaded and release publishing remains disabled.
+- `npm run check` passes formatting, lint, strict types, builds and **59 tests**. Six new deterministic tests cover mandatory opt-in, supported-host policy, Windows hosted-runner restriction, and macOS/Linux/Windows executable layouts with missing-executable and ambiguous-archive failures. These tests create disposable filesystem fixtures, not application processes.
+- `npx playwright test --config playwright.desktop.config.ts --list` without opt-in exits 1 with the safety message. With `CBC_DESKTOP_SMOKE=1`, the same listing command succeeds and discovers one desktop test without launching it. The compiled executable-discovery helper also resolves the existing macOS arm64 unsigned artifact without starting it. `git diff --check` passes.
+- Hosted execution remains **pending**, including actual Windows activation/login-setting behavior, Linux display/native startup, source/package cleanup on those platforms, and compatibility of the newly pinned action versions. Existing macOS startup evidence is unchanged; no fresh local desktop smoke run is claimed. The matrix is still a verification target, not an approved support policy. Installed/signed release, complete desktop workflows, data migration and hardware gaps remain open; milestone 2 is not complete.
+
 ## CBC 0.1.0 development checks
 
 Evidence recorded with the CBC 0.1.0 changes, macOS arm64, Node 24.22.1/npm 11.19.1, Electron 23.3.13, no controllers. User-facing changes are listed in [CHANGELOG.txt](../CHANGELOG.txt); watcher usage and storage compatibility are documented in [development.md](development.md).
