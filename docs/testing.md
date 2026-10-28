@@ -2,7 +2,7 @@
 
 ## Current evidence
 
-The milestone-1 baseline is documentation from source inspection. Milestone 2 now has hosted Linux/macOS/Windows locked installation/native loading, strict checks and unsigned package inspection, isolated browser checks on Linux and locally on macOS, and source/unsigned directory-package startup checks on macOS arm64 (below). Full desktop/browser workflows, installers, Windows/Linux desktop startup, physical controller connection, movement, and flashing remain unverified. `npm test` runs tooling, packaging-boundary, watcher, title, and minimal Dev Controller tests. The Dev Controller is a UI stub, not the planned machine behavior simulator. `npm start` launches the app, rather than acting as a verification placeholder.
+The milestone-1 baseline is documentation from source inspection. Milestone 2 now has hosted Linux x64/macOS arm64/Windows x64 locked installation/native loading, strict checks, unsigned package inspection, and source/unsigned directory-package startup checks, plus isolated browser checks on Linux and locally on macOS (below). Full desktop/browser workflows, installers, physical controller connection, movement, and flashing remain unverified. `npm test` runs tooling, packaging-boundary, watcher, title, and minimal Dev Controller tests. The Dev Controller is a UI stub, not the planned machine behavior simulator. `npm start` launches the app, rather than acting as a verification placeholder.
 
 For documentation changes, use `git diff --check`, verify relative links against files, and cross-check named symbols, events, routes, and keys against source. These checks establish documentation consistency, not application correctness. Milestone 2 is establishing reproducible installation and real checks; milestone 3 adds controller-free machine verification.
 
@@ -173,6 +173,21 @@ Evidence on `build/cross-platform-desktop-smoke`, macOS arm64, Node 24.22.1/npm 
 - `npx playwright test --config playwright.desktop.config.ts --list` without opt-in exits 1 with the safety message. With `CBC_DESKTOP_SMOKE=1`, the same listing command succeeds and discovers one desktop test without launching it. The compiled executable-discovery helper also resolves the existing macOS arm64 unsigned artifact without starting it. `git diff --check` passes.
 - Hosted execution remains **pending**, including actual Windows activation/login-setting behavior, Linux display/native startup, source/package cleanup on those platforms, and compatibility of the newly pinned action versions. Existing macOS startup evidence is unchanged; no fresh local desktop smoke run is claimed. The matrix is still a verification target, not an approved support policy. Installed/signed release, complete desktop workflows, data migration and hardware gaps remain open; milestone 2 is not complete.
 
+### Hosted cross-platform desktop startup results (milestone 2)
+
+[Verification run 40777976344](https://github.com/jkelstrup/ClosedBuilds-CONTROL/actions/runs/40777976344), for commit `cd29cc53aa694cd60032b25e8153309ee1879040` on `build/cross-platform-desktop-smoke` (draft PR #2), passes on all three GitHub-hosted runners. All used Node 24.22.1/npm 11.19.1 and Electron 45.1.0.
+
+| Runner / architecture | Source startup | Unsigned directory-package startup | Total job duration |
+| --- | --- | --- | --- |
+| `ubuntu-24.04` / x64, Xvfb | Passed | Passed | 2m00s |
+| `macos-15` / arm64 | Passed | Passed | 1m54s |
+| `windows-2025` / x64 | Passed, activated through `/activate` | Passed, activated through `/activate` | 2m21s |
+
+- Every job passed locked installation, dependency-tree validation, `npm run check` (59 tests), native loading in Node/Electron, unsigned packaging, and resource inspection before the two `CBC_DESKTOP_SMOKE=1` startup steps. Package startup used `CBC_DESKTOP_PACKAGE=1`; Linux prefixed both startup commands with `xvfb-run --auto-servernum`. Linux also passed all three isolated Chromium checks.
+- Each startup check asserts the exact Electron version, source/package identity, disposable profile, disconnected status, generated assets and retained library HTTP delivery, real preview-worker output, splash dismissal and HTTP/HTTPS port cleanup. No controller commands were issued. Windows startup's login-setting side effect is confined to disposable hosted runners; this is not a test of login startup or tray interaction.
+- Checkout 7.0.1/setup-node 7.1.0 now have hosted execution evidence on all three platforms. Their setup/post steps succeeded and npm download caches were saved on each runner; cache restoration under the new actions was not observed in this run. No signing, publishing or artifact uploads occurred.
+- This closes the previously missing Linux/Windows **startup smoke** evidence, not complete desktop/platform support. Installed launch, installers, signing, release ownership/update migration, persisted-data compatibility, full workflows, other OS/architecture combinations and hardware remain unverified. Milestone 2 remains open for explicit support/release scope decisions; this run does not approve those decisions.
+
 ## CBC 0.1.0 development checks
 
 Evidence recorded with the CBC 0.1.0 changes, macOS arm64, Node 24.22.1/npm 11.19.1, Electron 23.3.13, no controllers. User-facing changes are listed in [CHANGELOG.txt](../CHANGELOG.txt); watcher usage and storage compatibility are documented in [development.md](development.md).
@@ -213,7 +228,7 @@ These are verification requirements, not instructions to operate connected machi
 
 ## Remaining baseline gaps
 
-- Node/npm are pinned; installation/native loading and source/unsigned directory-package startup are verified only on macOS arm64. Installed/signed releases and the retained OS/architecture support matrix remain unestablished. Inherited CI/build targets are intentions, not test results.
+- Node/npm are pinned; hosted installation/native loading and source/unsigned directory-package startup pass on Linux x64, macOS arm64 and Windows x64. Installed/signed releases and an explicit supported OS/architecture policy remain unestablished. Other inherited build targets are intentions, not test results.
 - Local UI flows have been located, but out-of-repo CAM, socket, HTTP, and macro consumers are unknown.
 - Library versions/local patches and firmware build provenance are not fully established.
 - Mobile PWA registration/cache paths and non-Electron/Pi startup are unverified.
