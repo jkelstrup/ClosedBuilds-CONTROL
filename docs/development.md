@@ -10,11 +10,21 @@ This repository is CBC, an independent project rather than an upstream-tracking 
 - The first verified combination is macOS arm64, Node 24.22.1/npm 11.19.1, Electron **23.3.13** (embedded Node 18.12.1), serialport **12.0.0**, and native bindings **12.0.1**. The native package uses Node-API; loading under both runtimes passed. Source and unsigned directory-package startup/asset smoke checks also pass on this host; native source compilation, other platforms, installers, and full desktop workflows remain unverified.
 - Electron stays on the final 23.x patch within the inherited major for this bounded installation baseline, **not** as a supported/security-current Electron recommendation. Major Electron/native/build upgrades remain a dedicated milestone-2 change. Other inherited dependency ranges are resolved by the lockfile. `electron-builder-notarize` is pinned to 1.5.2 instead of `latest`; direct imports of `@electron/notarize` and `@serialport/parser-readline` are now declared. npm `overrides` replaces the previously ineffective Yarn `resolutions` for notarize 2.3.2.
 - `npm audit` reports **16 affected packages (15 high, 1 critical)** in this initial lock. These include Electron, updater/build tooling, `ip`, and transitive `tar`. Do not run `npm audit fix --force` blindly or treat this baseline as release-ready. Resolve these in targeted modernization/security work with runtime evidence. PR CI uses the pinned toolchain; inherited release automation has been removed, not modernized into an authorized release path.
-- `npm run check` runs formatting, lint, strict type checking, deterministic tooling/title tests, and tooling/browser builds. Machine behavior tests and a controller simulator do not exist yet. See [testing.md](testing.md).
+- `npm run check` runs formatting, lint, strict type checking, deterministic tooling/title/dev-controller tests, and builds. The Dev Controller is a UI stub, not the planned machine simulator. See [testing.md](testing.md).
 
 Do not launch the app merely to inspect architecture: startup opens network listeners, polls serial ports, and can fetch upstream update data. Use a trusted isolated network, disconnected controllers, and a disposable profile for future runtime checks. Do not run `scan.js`, `pi-install.sh`, signing scripts, or publishing CI as verification; they scan networks, modify systems, or access release infrastructure.
 
 ## Incremental TypeScript and local checks
+
+### Dev Controller
+
+**Temporary development aid — remove eventually.** This stub exists only to unblock connected-state UI work before the milestone-3 simulator is available. Remove it once that simulator covers this use case, including its dropdown entry, legacy connection branch, module, build/package wiring, and stub-specific tests. Do not maintain it as a second simulator.
+
+Run `npm run dev`, select **Dev Controller (simulated)** under **Development** in the device dropdown, and connect normally. The backend reports a connected, idle three-axis Grbl controller at zero coordinates. Disconnect normally to return to the disconnected UI. The fake device is not listed in the firmware-flashing dropdown.
+
+This is only for connected-state UI development: commands receive acknowledgements but are ignored. Movement, probing, settings, timing, alarms and realistic job execution are not simulated. Existing job-history and macro side effects still apply. The stub opens no serial/TCP connection; normal application startup still starts servers and discovery. Keep physical controllers disconnected during development.
+
+The checked TypeScript implementation is `src/machine/dev-controller.ts`, compiled as CommonJS to `dist/machine/dev-controller.js` by `npm run build` and included in unsigned packages. Restart `npm run dev` after editing this module; it is not live-watched.
 
 ### Automatic development reloads
 

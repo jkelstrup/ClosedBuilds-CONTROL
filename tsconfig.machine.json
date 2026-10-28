@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src/machine",
+    "outDir": "dist/machine"
+  },
+  "include": ["src/machine/**/*.ts"],
+  "exclude": ["**/*.test.ts"]
+}

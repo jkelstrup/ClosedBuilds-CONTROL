@@ -9,7 +9,7 @@ package.json main → index.js (Electron main process)
   ├─ Express static app/ + HTTP routes
   ├─ HTTP + HTTPS servers ← Socket.IO → desktop/browser/mobile clients
   ├─ one shared machine status, G-code queue, sent buffer, connection
-  │    └─ SerialPort (USB) or net.connect (TCP port 23)
+   │    └─ SerialPort (USB), net.connect (TCP port 23), or in-memory Dev Controller
   │         └─ ReadlineParser → firmware/reply parsing → queue progression
   ├─ Electron window/tray/dialogs, updates, system information
   └─ uploads, firmware downloads, flashing subprocesses, USB file copies
@@ -72,5 +72,7 @@ Mobile jog loads a subset of those same scripts. Both full/mobile HTML load `/ge
 - UI startup can fetch upstream version/changelog information and request updater downloads. No isolated, offline development mode exists yet.
 
 ## First extraction seam
+
+The selectable Dev Controller uses `src/machine/dev-controller.ts`, an in-memory duplex stream wired into the legacy reply parser. A special connection branch supplies static Grbl identity and polling without hardware detection. It acknowledges ignored commands and reports fixed idle coordinates; it is not the extracted machine interface or deterministic behavioral simulator planned in milestone 3. See [usage and limits](development.md#dev-controller).
 
 Follow milestone 2 before module migration. Then introduce a callable parser seam with characterization fixtures, followed by transport/session and streaming behavior. Keep the legacy event/status interface in an adapter until its consumers migrate. The future machine module must run without Electron, DOM, HTTP listeners, or real hardware; moving globals into several files without changing ownership does not establish that interface.

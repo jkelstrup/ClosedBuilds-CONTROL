@@ -17,6 +17,7 @@ export function findUnsignedArchive(output: string): string {
 const requiredFiles = [
   'index.js',
   'grblStrings.js',
+  'dist/machine/dev-controller.js',
   'LICENSE',
   'CHANGELOG.txt',
   'privkey1.pem',
@@ -42,8 +43,13 @@ export async function verifyPackageResources(
     entry.split(sep).join('/'),
   );
   assert(
-    !entries.some((entry) =>
-      /^\/(scripts|src|tests|docs|\.github|dist)(\/|$)/.test(entry),
+    !entries.some(
+      (entry) =>
+        /^\/(scripts|src|tests|docs|\.github)(\/|$)/.test(entry) ||
+        (entry.startsWith('/dist/') &&
+          !['/dist/machine', '/dist/machine/dev-controller.js'].includes(
+            entry,
+          )),
     ),
     'Development files leaked into the package',
   );

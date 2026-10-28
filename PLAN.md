@@ -124,6 +124,10 @@ Each milestone should land as small, reviewable changes. Follow dependencies bel
 
 **Depends on:** 2. This is the first major architectural milestone.
 
+The minimal selectable [Dev Controller](docs/development.md#dev-controller) unlocks connected-state UI development through the legacy adapter. It is not the behavioral simulator or machine extraction below; these checklist items remain pending.
+
+- [ ] Remove the temporary Dev Controller stub and its integration/build/package wiring once the milestone-3 simulator supports connected-state UI development; retain that workflow through the replacement simulator.
+
 - [ ] Establish fixture-backed characterization tests for current parsing and streaming behavior. Introduce only the minimal callable seam necessary to test legacy behavior without starting Electron or servers; capture expected outputs before changing the implementation.
 - [ ] Start with controller reply parsing (`parseFeedback`, `gotModals`, firmware identification, alarm/error lookup), then extract transport lifecycle and job streaming (`machineSend`, `BufferSpace`, `send1Q`, queue operations, pause/resume/stop).
 - [ ] Make state ownership explicit. Model connection, controller-reported execution, and host job lifecycle separately where they represent different facts. Translate legacy numeric status values in a compatibility adapter while existing clients still use them.

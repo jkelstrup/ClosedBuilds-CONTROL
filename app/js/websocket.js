@@ -1086,6 +1086,10 @@ function selectPort(port) {
   if (port == undefined) {
     port = $("#portUSB").val()
   }
+  if (port == "Dev Controller") {
+    socket.emit('connectTo', { type: 'dev' });
+    return;
+  }
   if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(port)) {
     var data = {
       ip: port,
@@ -1195,6 +1199,7 @@ function populatePortsMenu() {
     }
     response += `</optgroup>`
     var select = $("#portUSB").data("select");
+    response += `<optgroup label="Development"><option value="Dev Controller">Dev Controller (simulated)</option></optgroup>`;
     select.data(response);
 
     $('#portUSB').parent(".select").removeClass('disabled')

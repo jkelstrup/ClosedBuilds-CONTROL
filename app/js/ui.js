@@ -122,6 +122,9 @@ function setConnectBar(val, status) {
     $('.macrobtn').removeClass('disabled')
     $('.grblCalibrationMenu').addClass("disabled")
   }
+  if (status.comms.interfaces.type == "dev" && val > 0) {
+    $('#connectStatus').html("Dev Controller (simulated)");
+  }
 }
 
 // Toolbar with play/pause/stop

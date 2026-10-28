@@ -27,7 +27,7 @@ Every application command listener below is in the `io.on('connection')` block i
 
 | Group | Events | Existing payload conventions / implementation |
 | --- | --- | --- |
-| Connection/discovery | `scannetwork`, `connectTo`, `closePort` | Scan range; `{type, port, baud}` for USB or `{type, ip}` for telnet; closes shared port |
+| Connection/discovery | `scannetwork`, `connectTo`, `closePort` | Scan range; `{type, port, baud}` for USB, `{type, ip}` for telnet, or `{type: "dev"}` for the in-memory UI stub; closes shared port |
 | Jobs/commands | `runJob`, `runCommand`, `pause`, `resume`, `stop` | Job `{data, isJob, completedMsg}`; command text; stop object `{stop, jog, abort}` (some callers send `false`) |
 | Movement | `jog`, `jogXY`, `jogTo`, `setZero`, `gotoZero`, `setPosition`, `probe` | Jog comma-separated axis/distance/feed; XY object; jogTo coordinates/mode/feed; axis strings; coordinate object; probe direction/offset |
 | Overrides and recovery | `feedOverride`, `spindleOverride`, `laserTest`, `clearAlarm`, `resetMachine` | Numeric/coercible overrides; laser object; alarm mode; reset. Inspect handler for exact conventions |

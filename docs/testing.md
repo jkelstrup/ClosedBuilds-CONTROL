@@ -2,7 +2,7 @@
 
 ## Current evidence
 
-The milestone-1 baseline is documentation from source inspection. Milestone 2 now has locked installation/native loading, real tooling/browser checks, and source/unsigned directory-package startup checks on macOS arm64 (below). Full desktop/browser workflows, installers, other platforms, controller connection, movement, and flashing remain unverified. `npm test` runs tooling, packaging-boundary, watcher, and title tests; there is no machine behavior suite or controller simulator yet. `npm start` launches the app, rather than acting as a verification placeholder.
+The milestone-1 baseline is documentation from source inspection. Milestone 2 now has locked installation/native loading, real tooling/browser checks, and source/unsigned directory-package startup checks on macOS arm64 (below). Full desktop/browser workflows, installers, other platforms, physical controller connection, movement, and flashing remain unverified. `npm test` runs tooling, packaging-boundary, watcher, title, and minimal Dev Controller tests. The Dev Controller is a UI stub, not the planned machine behavior simulator. `npm start` launches the app, rather than acting as a verification placeholder.
 
 For documentation changes, use `git diff --check`, verify relative links against files, and cross-check named symbols, events, routes, and keys against source. These checks establish documentation consistency, not application correctness. Milestone 2 is establishing reproducible installation and real checks; milestone 3 adds controller-free machine verification.
 
@@ -91,6 +91,15 @@ Evidence recorded with the CBC 0.1.0 changes, macOS arm64, Node 24.22.1/npm 11.1
 - `npm run check` passes all 18 tests, covering tooling, watcher reload/restart priority and cleanup, development IPC guards, dynamic CBC titles, and default/overridden profile paths. Tests do not import the application entry point.
 - Native `npm run dev` smoke checks: frontend edits send reload requests without replacing Electron; main edits restart it; SIGTERM stops the launcher and Electron. HTTP serves the CBC title and supplied SVG, and `/api/version` reports `0.1.0`.
 - Remaining gaps: native visual workflows, existing-data round trips, Windows/Linux runtime behavior, and packaging. Reloads discard unsaved renderer state; these checks do not establish machine behavior or state-preserving HMR.
+
+## Minimal Dev Controller
+
+Evidence on `feat/minimal-dev-controller`, macOS arm64, Node 24.22.1/npm 11.19.1, no application startup or controller access:
+
+- `npm run check`: 41 tests pass, including asynchronous acknowledgements, split/batched input, fixed status, identification/modals, disconnect cleanup and reconnect. A VM evaluates only the legacy connection handler and cleanup with an in-memory stream; it never imports the application entry point or opens listeners/devices.
+- `npm run test:e2e`: three isolated Chromium tests pass. The new test uses real jQuery and existing dropdown/status functions against inert markup, verifying dev selection, exclusion from flashing, simulated badge, and normal enabled/disabled jog and console controls. Backend snapshots and the Metro select adapter are supplied by the fixture; this is not a live Socket.IO or full desktop check.
+- `npm run package` and `npm run verify:package`: unsigned macOS arm64 artifact builds and contains the compiled CommonJS controller module with bytes matching source. The artifact was not launched.
+- No motion, probing, settings, alarms, timing or realistic job behavior is simulated or verified. Milestone 3's extracted machine module and deterministic simulator remain pending. Usage and limitations: [Dev Controller](development.md#dev-controller).
 
 ## Scenario selection for future implementation
 

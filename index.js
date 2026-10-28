@@ -1146,6 +1146,9 @@ io.on("connection", function(socket) {
         console.log("connect", "Connecting to " + data.ip + " via " + data.type);
         port = net.connect(23, data.ip);
         port.isOpen = true;
+      } else if (data.type == "dev") {
+        const { DevController } = require('./dist/machine/dev-controller.js');
+        port = new DevController();
       }
 
       const parser = port.pipe(new ReadlineParser({
@@ -1580,6 +1583,33 @@ io.on("connection", function(socket) {
             }
           }
         }); // end of parser.on(data)
+
+        if (data.type == "dev") {
+          status.comms.connectionStatus = 2;
+          status.comms.runStatus = "Idle";
+          status.comms.blocked = false;
+          status.comms.paused = false;
+          status.comms.alarm = "";
+          status.comms.interfaces.type = "dev";
+          status.comms.interfaces.activePort = "Dev Controller";
+          status.comms.interfaces.activeBaud = false;
+          status.machine.name = "Dev Controller";
+          status.machine.has4thAxis = false;
+          status.machine.firmware.type = "grbl";
+          status.machine.firmware.platform = "gnea";
+          status.machine.firmware.version = "1.1h";
+          status.machine.firmware.features = [];
+          status.machine.firmware.blockBufferSize = 15;
+          status.machine.firmware.rxBufferSize = 128;
+          status.machine.modals.homedRecently = false;
+          addQRealtime("?");
+          clearInterval(statusLoop);
+          statusLoop = setInterval(function() { addQRealtime("?"); }, 200);
+          io.sockets.emit('data', { command: 'connect', response: 'Dev Controller connected (simulated). Commands are ignored; motion, probing and settings are not simulated.', type: 'info' });
+          io.sockets.emit('status', status);
+          io.sockets.emit('grbl', status.machine.firmware);
+          return;
+        }
 
         // Then try to connect
         // set status
@@ -2396,6 +2426,8 @@ function stopPort() {
       port.destroy();
       port.isOpen = false;
     }
+  } else if (status.comms.interfaces.type == "dev") {
+    port.destroy();
   }
 }
 
