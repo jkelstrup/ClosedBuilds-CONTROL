@@ -55,8 +55,10 @@ test('desktop startup serves generated assets with no controller connection', as
       packaged: app.isPackaged,
       profile: app.getPath('userData'),
       appPath: app.getAppPath(),
+      electron: process.versions.electron,
     }));
     expect(runtime.packaged).toBe(Boolean(executable));
+    expect(runtime.electron).toBe(manifest.devDependencies.electron);
     expect(await realpath(runtime.profile)).toBe(await realpath(profile));
     if (executable) expect(runtime.appPath).toContain('app.asar');
     const page = await application.firstWindow();

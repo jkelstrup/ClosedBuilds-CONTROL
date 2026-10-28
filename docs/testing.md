@@ -84,6 +84,19 @@ Evidence on `build/ci-unsigned-packages`, macOS arm64, Node 24.22.1/npm 11.19.1,
 - `npm run package` and argument-free `npm run verify:package` pass against the newly built macOS arm64 directory package. Builder explicitly skips signing; resources/native unpacking match current source.
 - The existing CI matrix now runs those packaging commands after its checks, without signing credentials, publishing, application launch, or artifact upload. Hosted execution, Windows/Linux packaging, desktop support, installers, security modernization, and project-owned tagged publishing remain unverified. Milestone 2 remains open.
 
+### Electron runtime modernization (milestone 2)
+
+Evidence on `build/modernize-electron`, macOS arm64 (Darwin 27), Node 24.22.1/npm 11.19.1, Electron 45.1.0 with embedded Node 24.22.1, electron-builder 24.13.3. The maintainer explicitly confirmed disconnected controllers, a trusted isolated network, and other CBC instances closed before desktop checks. No machine commands were sent.
+
+- `npm ci` and `npm ls --depth=0` pass with the updated lockfile. Root postinstall explicitly installs Electron's binary before running native dependency setup. `npm run verify:install` passes in host Node and Electron's Node mode: serialport 12.0.0/native bindings 12.0.1 load unchanged, unopened port construction and split-line framing pass. This is Node-API binary-load evidence, not native source compilation or physical serial behavior.
+- `npm run check` passes all 41 deterministic tests, strict checks, and builds. `npm run test:e2e` passes all three isolated Chromium checks (worker, full/mobile title, Dev Controller UI); these browser checks do not themselves run Electron. The existing Chromium 110 build target is retained for shared browser assets.
+- `npm run package` and `npm run verify:package` pass for the Electron 45.1.0 macOS arm64 unsigned directory package. Signing is explicitly skipped; firmware/tools, generated assets, the Dev Controller module and native unpacking remain verified. No installer, signing, publishing, or release configuration changes.
+- `CBC_DESKTOP_SMOKE=1 npm run test:desktop` and `CBC_DESKTOP_SMOKE=1 CBC_PACKAGED_EXECUTABLE="$PWD/dist/unsigned/mac-arm64/CBC.app/Contents/MacOS/CBC" npm run test:desktop` both pass. The test now asserts the exact pinned Electron version for source and package, alongside profile/identity, disconnected status, HTTP assets, served worker output, splash dismissal and port cleanup.
+- `npm audit` exits 1 with **14 affected packages (13 high, 1 critical)** rather than the initial 16. Electron is no longer listed; builder/updater/rebuild/node-gyp, `ip` and transitive security debt remain. This is not a security-complete or distributable release.
+- Dependency compatibility limits: Electron 45 requires macOS 13+, and no longer ships Windows ia32/Linux armv7l binaries. The retained platform matrix still needs an explicit support decision and evidence. Windows/Linux/x64 startup, installed/signed releases, persisted-data migration, full desktop workflows, motion and flashing remain unverified. The legacy renderer still enables Node integration without context isolation; this runtime upgrade does not harden that boundary.
+
+Selection reference: [official Electron breaking changes](https://www.electronjs.org/docs/latest/breaking-changes), including Electron 42's explicit binary installer and Electron 44's platform removals. The current startup path has no preload, renderer clipboard calls, or Electron `File.path` dependency requiring migration in this slice; broader feature compatibility remains unverified.
+
 ## CBC 0.1.0 development checks
 
 Evidence recorded with the CBC 0.1.0 changes, macOS arm64, Node 24.22.1/npm 11.19.1, Electron 23.3.13, no controllers. User-facing changes are listed in [CHANGELOG.txt](../CHANGELOG.txt); watcher usage and storage compatibility are documented in [development.md](development.md).
