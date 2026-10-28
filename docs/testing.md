@@ -132,6 +132,16 @@ Evidence on `fix/disable-inherited-updates`, macOS arm64 (Darwin 27), Node 24.22
 - `npm run package` and `npm run verify:package` pass for the macOS arm64 unsigned directory artifact. Signing is explicitly skipped; resource/native layout checks pass, including absence of the updater dependency and development/generated update feeds. The artifact was not launched.
 - Remaining gaps: no new source/package desktop startup, installed app, other-platform runtime, full workflows or hardware evidence. Interface firmware downloads, other network activity, inherited TLS material, renderer security and remaining identity/support/signing configuration are unchanged. Disabling application updates is not an offline mode or a release-readiness claim. CBC update hosting, signature policy, publishing and installed-user update migration must be deliberately configured and tested before re-enabling application updates; no release workflow is enabled.
 
+### Local-address dependency retirement (milestone 2)
+
+Evidence on `build/remove-ip-dependency`, macOS arm64 (Darwin 27), Node 24.22.1/npm 11.19.1, Electron 45.1.0, electron-builder 26.18.0. No application startup, controller access or network scan:
+
+- Removed the sole `ip` dependency from the manifest/lockfile. `src/server/local-address.ts` uses `node:os` with the legacy default selection order and IPv4 loopback fallback; all existing runtime lookups and the standalone scan script require its compiled CommonJS output. No socket/status shapes or discovery ranges changed.
+- `npm ci`, `npm ls --depth=0`, and `npm run verify:install` pass, including native serial loading/framing in host Node and Electron's Node mode without device enumeration/opening. `npm audit` exits 0 with **zero vulnerabilities**; this is registry evidence, not a security-complete claim. Installation still warns about deprecated dependencies, including Multer 1.x.
+- `npm run check` passes **51 tests**, strict checks and builds. Five new address tests cover interface/address order, IPv6/loopback exclusion, missing/empty interfaces, link-local selection, fallback and fresh snapshots without mutation. Package inspection adds a regression test rejecting the retired `ip` dependency.
+- `npm run package` and `npm run verify:package` pass for the unsigned macOS arm64 directory artifact, including byte verification of the new compiled module and absence of `ip`. Signing is explicitly skipped. The artifact was not launched.
+- Gaps: no new source/package startup, live LAN/default-route selection, Interface download, actual network scan, other-platform runtime, hosted CI, installer, full workflow or hardware evidence. Browser tests were not rerun because browser assets are unchanged. Inherited TLS material, renderer/network security and release ownership/migration remain unresolved. Milestone 2 remains open.
+
 ## CBC 0.1.0 development checks
 
 Evidence recorded with the CBC 0.1.0 changes, macOS arm64, Node 24.22.1/npm 11.19.1, Electron 23.3.13, no controllers. User-facing changes are listed in [CHANGELOG.txt](../CHANGELOG.txt); watcher usage and storage compatibility are documented in [development.md](development.md).

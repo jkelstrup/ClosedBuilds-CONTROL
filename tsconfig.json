@@ -19,6 +19,7 @@
   "include": [
     "scripts/**/*.ts",
     "src/machine/**/*.ts",
+    "src/server/**/*.ts",
     "src/renderer/**/*.test.ts",
     "tests/toolchain/**/*.ts",
     "vitest.config.mts"

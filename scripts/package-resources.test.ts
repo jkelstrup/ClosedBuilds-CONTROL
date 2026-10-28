@@ -26,6 +26,11 @@ it.each([
     body: '{"name":"electron-updater"}',
     error: 'Disabled application updater leaked into package',
   },
+  {
+    file: 'node_modules/ip/package.json',
+    body: '{"name":"ip"}',
+    error: 'Retired ip dependency leaked into package',
+  },
 ])('rejects unsafe artifact contents: $file', async ({ file, body, error }) => {
   const root = await mkdtemp(join(tmpdir(), 'cbc-package-inspection-'));
   const source = join(root, 'fixture');

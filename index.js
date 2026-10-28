@@ -139,13 +139,13 @@ var httpsOptions = {
 };
 
 const httpsserver = https.createServer(httpsOptions, app).listen(3001, function() {
-  debug_log('https: listening on:' + ip.address() + ":3001");
+  debug_log('https: listening on:' + localAddress() + ":3001");
 });
 
 const httpserver = http.listen(config.webPort, '0.0.0.0', httpServerSuccess).on('error', httpServerError);
 
 function httpServerSuccess() {
-  debug_log('http:  listening on:' + ip.address() + ":" + config.webPort);
+  debug_log('http:  listening on:' + localAddress() + ":" + config.webPort);
   if (jogWindow) {
     jogWindow.loadURL(`http://localhost:${config.webPort}/`);
   }
@@ -174,7 +174,7 @@ const {
 
 // telnet
 const net = require('net');
-var ip = require("ip");
+var { localAddress } = require("./dist/server/local-address.js");
 const Evilscan = require('evilscan');
 
 var md5 = require('md5');
@@ -353,7 +353,7 @@ var status = {
   login: false,
   driver: {
     version: require('./package').version,
-    ipaddress: ip.address(),
+    ipaddress: localAddress(),
     operatingsystem: false,
     powersettings: {
       usbselectiveAC: null,
@@ -495,7 +495,7 @@ app.get('/api/version', (req, res) => {
   data = {
     "application": "OMD",
     "version": require('./package').version,
-    "ipaddress": ip.address() + ":" + config.webPort
+    "ipaddress": localAddress() + ":" + config.webPort
   }
   res.send(JSON.stringify(data), null, 2);
 })
@@ -3149,7 +3149,7 @@ if (isElectron()) {
       });
 
       jogWindow.setOverlayIcon(nativeImage.createFromPath(iconPath), 'Icon');
-      var ipaddr = ip.address();
+      var ipaddr = localAddress();
       // jogWindow.loadURL(`//` + ipaddr + `:3000/`)
       jogWindow.loadURL(`http://localhost:${config.webPort}/`);
       //jogWindow.webContents.openDevTools()
@@ -3721,7 +3721,7 @@ function flashGrblHal(data) {
 
 // LAN Scanner for BlackBox X32, Interface, SwitchBlox etc //
 function scanForTelnetDevices(range) {
-  //var localNetwork = ip.address().split('.');
+  //var localNetwork = localAddress().split('.');
   //var network = localNetwork[0] + '.' + localNetwork[1] + '.' + localNetwork[2];
   //var range = network + ".1-" + network + ".254"
 

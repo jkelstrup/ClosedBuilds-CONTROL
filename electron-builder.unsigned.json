@@ -8,6 +8,7 @@
     "index.js",
     "grblStrings.js",
     "dist/machine/dev-controller.js",
+    "dist/server/local-address.js",
     "package.json",
     "LICENSE",
     "CHANGELOG.txt",

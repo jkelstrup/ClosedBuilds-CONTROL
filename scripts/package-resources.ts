@@ -18,6 +18,7 @@ const requiredFiles = [
   'index.js',
   'grblStrings.js',
   'dist/machine/dev-controller.js',
+  'dist/server/local-address.js',
   'LICENSE',
   'CHANGELOG.txt',
   'privkey1.pem',
@@ -47,9 +48,12 @@ export async function verifyPackageResources(
       (entry) =>
         /^\/(scripts|src|tests|docs|\.github)(\/|$)/.test(entry) ||
         (entry.startsWith('/dist/') &&
-          !['/dist/machine', '/dist/machine/dev-controller.js'].includes(
-            entry,
-          )),
+          ![
+            '/dist/machine',
+            '/dist/machine/dev-controller.js',
+            '/dist/server',
+            '/dist/server/local-address.js',
+          ].includes(entry)),
     ),
     'Development files leaked into the package',
   );
@@ -60,6 +64,10 @@ export async function verifyPackageResources(
   assert(
     !entries.some((entry) => entry.includes('/node_modules/electron-updater')),
     'Disabled application updater leaked into package',
+  );
+  assert(
+    !entries.some((entry) => /\/node_modules\/ip(\/|$)/.test(entry)),
+    'Retired ip dependency leaked into package',
   );
   const manifest: unknown = JSON.parse(
     extractFile(archive, 'package.json').toString(),

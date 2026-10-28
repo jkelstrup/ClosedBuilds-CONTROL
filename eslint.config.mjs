@@ -16,6 +16,7 @@ export default tseslint.config(
       'scripts/**/*.ts',
       'src/renderer/**/*.ts',
       'src/machine/**/*.ts',
+      'src/server/**/*.ts',
       'tests/toolchain/**/*.ts',
       'tests/e2e/**/*.ts',
       'tests/desktop/**/*.ts',

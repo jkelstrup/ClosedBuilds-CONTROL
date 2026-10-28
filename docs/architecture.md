@@ -68,7 +68,7 @@ Mobile jog loads a subset of those same scripts. Both full/mobile HTML load `/ge
 - Renderer preferences, macros, job history, and recovery markers live in origin-scoped localStorage, not in one application settings file. Keys and owners are in [contracts.md](contracts.md#saved-data).
 - `uploadsDir` is `electronApp.getPath('userData') + '/upload/'` in Electron. Multer uses it for job/custom-firmware uploads. Formidable `/upload` uses its own temporary file handling. `uploadedgcode` and `uploadedworkspace` are in-memory values, not durable job storage.
 - Firmware operations combine root binary assets, downloaded/uploaded images, platform executables, and ASAR path rewriting. Interface preparation writes files and optional Wi-Fi credentials to a user-selected drive.
-- `scanForTelnetDevices` scans a caller-provided range on port 23. `scan.js` is a separate script that immediately scans the local subnet; it is not the server's entry point.
+- `scanForTelnetDevices` scans a caller-provided range on port 23. `scan.js` is a separate script that immediately scans the local subnet; it is not the server's entry point. Both the runtime's displayed local address and the standalone script use `src/server/local-address.ts`, compiled to `dist/server/local-address.js`, instead of the retired `ip` dependency. See [selection/build contract](development.md#local-network-address).
 - Upstream application version/changelog/statistics fetches and automatic downloads/installations have been removed. The UI explains that CBC automatic updates are not configured. Interface firmware downloads and other network activity remain; this is not an offline mode.
 
 ## First extraction seam
