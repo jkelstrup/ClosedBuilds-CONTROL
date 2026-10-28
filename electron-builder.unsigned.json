@@ -1,0 +1,48 @@
+{
+  "extends": null,
+  "appId": "openbuilds.control",
+  "productName": "CBC",
+  "directories": { "output": "dist/unsigned" },
+  "asar": true,
+  "files": [
+    "index.js",
+    "grblStrings.js",
+    "dist/machine/dev-controller.js",
+    "dist/server/local-address.js",
+    "package.json",
+    "LICENSE",
+    "CHANGELOG.txt",
+    "app/**/*",
+    "*.bin",
+    "*.hex",
+    "esptool-linux",
+    "esptool-mac",
+    "esptool.exe",
+    "privkey1.pem",
+    "fullchain1.pem"
+  ],
+  "asarUnpack": [
+    "*.bin",
+    "esptool-linux",
+    "esptool-mac",
+    "esptool.exe",
+    "**/*.node"
+  ],
+  "extraMetadata": { "cbcUnsignedVerification": true },
+  "publish": null,
+  "afterSign": null,
+  "forceCodeSigning": false,
+  "mac": {
+    "identity": null,
+    "notarize": false,
+    "hardenedRuntime": false,
+    "icon": "build/icon.icns",
+    "category": "public.app-category.graphics-design"
+  },
+  "win": {
+    "signtoolOptions": { "sign": null },
+    "signAndEditExecutable": false,
+    "icon": "build/icon.ico"
+  },
+  "linux": { "icon": "build/" }
+}

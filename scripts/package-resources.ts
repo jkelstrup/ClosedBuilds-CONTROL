@@ -1,0 +1,146 @@
+import assert from 'node:assert/strict';
+import { readFile, readdir, access } from 'node:fs/promises';
+import { join, dirname, normalize, sep } from 'node:path';
+import { extractFile, listPackage, statFile } from '@electron/asar';
+import { globSync } from 'node:fs';
+
+export function findUnsignedArchive(output: string): string {
+  const archives = globSync('**/app.asar', { cwd: output });
+  assert.equal(
+    archives.length,
+    1,
+    'Expected exactly one unsigned app.asar; build first, or pass an explicit archive path when multiple packages exist',
+  );
+  return join(output, archives[0]!);
+}
+
+const requiredFiles = [
+  'index.js',
+  'grblStrings.js',
+  'dist/machine/dev-controller.js',
+  'dist/server/local-address.js',
+  'LICENSE',
+  'CHANGELOG.txt',
+  'privkey1.pem',
+  'fullchain1.pem',
+  'app/index.html',
+  'app/jog/index.html',
+  'app/upload.html',
+  'app/generated/renderer.js',
+  'app/generated/preview-worker.js',
+  'app/lib/threejs/three.min.js',
+  'app/lib/ace/src-noconflict/mode-cncpro.js',
+  'app/icon.png',
+  'app/favicon.ico',
+  'app/img/CBC.svg',
+];
+
+export async function verifyPackageResources(
+  root: string,
+  archive: string,
+): Promise<void> {
+  // ASAR lists native separators, but the resource inventory is portable.
+  const entries = listPackage(archive, { isPack: false }).map((entry) =>
+    entry.split(sep).join('/'),
+  );
+  assert(
+    !entries.some(
+      (entry) =>
+        /^\/(scripts|src|tests|docs|\.github)(\/|$)/.test(entry) ||
+        (entry.startsWith('/dist/') &&
+          ![
+            '/dist/machine',
+            '/dist/machine/dev-controller.js',
+            '/dist/server',
+            '/dist/server/local-address.js',
+          ].includes(entry)),
+    ),
+    'Development files leaked into the package',
+  );
+  assert(
+    !entries.includes('/dev-app-update.yml'),
+    'Development update feed leaked into package',
+  );
+  assert(
+    !entries.some((entry) => entry.includes('/node_modules/electron-updater')),
+    'Disabled application updater leaked into package',
+  );
+  assert(
+    !entries.some((entry) => /\/node_modules\/ip(\/|$)/.test(entry)),
+    'Retired ip dependency leaked into package',
+  );
+  const manifest: unknown = JSON.parse(
+    extractFile(archive, 'package.json').toString(),
+  );
+  assert(
+    manifest &&
+      typeof manifest === 'object' &&
+      'cbcUnsignedVerification' in manifest &&
+      manifest.cbcUnsignedVerification === true,
+    'Not an unsigned verification package',
+  );
+  const sourceManifest: unknown = JSON.parse(
+    await readFile(join(root, 'package.json'), 'utf8'),
+  );
+  assert(
+    sourceManifest &&
+      typeof sourceManifest === 'object' &&
+      'version' in sourceManifest,
+  );
+  assert(
+    'version' in manifest && manifest.version === sourceManifest.version,
+    'Package version is stale',
+  );
+  const rootResources = (await readdir(root)).filter(
+    (name) =>
+      /\.(bin|hex)$/.test(name) || /^esptool(?:-linux|-mac|\.exe)$/.test(name),
+  );
+  for (const file of [...requiredFiles, ...rootResources]) {
+    // ASAR's reader splits directories on path.sep, unlike Node filesystem APIs.
+    const archivePath = normalize(file);
+    assert(
+      extractFile(archive, archivePath).equals(
+        await readFile(join(root, file)),
+      ),
+      `Missing or stale packaged resource: ${file}`,
+    );
+    if (file.endsWith('.bin') || file.startsWith('esptool')) {
+      const entry = statFile(archive, archivePath);
+      assert(
+        'unpacked' in entry && entry.unpacked,
+        `Resource must be outside ASAR: ${file}`,
+      );
+      await access(`${archive}.unpacked/${file}`);
+    }
+  }
+  for (const directory of ['PROBE', 'PROFILESGRBL', 'PROFILESHAL']) {
+    for (const name of await readdir(
+      join(root, 'app/wizards/interface', directory),
+    )) {
+      const file = `app/wizards/interface/${directory}/${name}`;
+      assert(
+        extractFile(archive, normalize(file)).equals(
+          await readFile(join(root, file)),
+        ),
+        `Missing or stale Interface resource: ${file}`,
+      );
+    }
+  }
+  assert(
+    entries.some(
+      (entry) => entry.endsWith('.node') && entry.includes('bindings-cpp'),
+    ),
+    'Native serial binding missing',
+  );
+  for (const entry of entries.filter((entry) => entry.endsWith('.node'))) {
+    const stat = statFile(archive, normalize(entry.slice(1)));
+    assert(
+      'unpacked' in stat && stat.unpacked,
+      `Native binding not unpacked: ${entry}`,
+    );
+    await access(`${archive}.unpacked${entry}`);
+  }
+  await assert.rejects(access(join(dirname(archive), 'app-update.yml')), {
+    code: 'ENOENT',
+  });
+}

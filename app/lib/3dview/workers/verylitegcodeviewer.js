@@ -8,16 +8,18 @@ self.addEventListener('message', function(e) {
   self.postMessage(JSON.stringify(result));
 }, false);
 
-// This is a simplified and updated version of http://gcode.joewalnes.com/
-// Updated with code from http://chilipeppr.com/tinyg's 3D viewer to support more CNC type Gcode
-// Simplified by Andrew Hodel in 2015
-// Updated by PvdW in 2016 for S-Value lasers
-// Updates by PvdW in 2017 - new arc code from http://chilipeppr.com
-// Updates by PvdW in 2017 - AUTODETECT MAX S VALUE
-// Updated by PvdW in 2017 - Parse GCODE to find starting temperatures (preheat machine)
-// Updated by PvdW in 2018 - Webworker Version
-// Updated by PvdW in 2019 - Improve Performance
-// Updated by PvdW in 2021 - New Sim Data, Smaller footprint, more efficient "lines" userData
+/*!
+ * This is a simplified and updated version of http://gcode.joewalnes.com/
+ * Updated with code from http://chilipeppr.com/tinyg's 3D viewer to support more CNC type Gcode
+ * Simplified by Andrew Hodel in 2015
+ * Updated by PvdW in 2016 for S-Value lasers
+ * Updates by PvdW in 2017 - new arc code from http://chilipeppr.com
+ * Updates by PvdW in 2017 - AUTODETECT MAX S VALUE
+ * Updated by PvdW in 2017 - Parse GCODE to find starting temperatures (preheat machine)
+ * Updated by PvdW in 2018 - Webworker Version
+ * Updated by PvdW in 2019 - Improve Performance
+ * Updated by PvdW in 2021 - New Sim Data, Smaller footprint, more efficient "lines" userData
+ */
 
 
 var lastLine = {

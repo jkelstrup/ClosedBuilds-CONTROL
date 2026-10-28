@@ -44,7 +44,7 @@ function debug_log() {
   }
 } // end Debug Logger
 
-debug_log("Starting OpenBuilds CONTROL v" + require('./package').version)
+debug_log("Starting CBC v" + require('./package').version)
 
 var config = {};
 config.webPorts = [3000, 3020, 3200, 3220]
@@ -139,13 +139,13 @@ var httpsOptions = {
 };
 
 const httpsserver = https.createServer(httpsOptions, app).listen(3001, function() {
-  debug_log('https: listening on:' + ip.address() + ":3001");
+  debug_log('https: listening on:' + localAddress() + ":3001");
 });
 
 const httpserver = http.listen(config.webPort, '0.0.0.0', httpServerSuccess).on('error', httpServerError);
 
 function httpServerSuccess() {
-  debug_log('http:  listening on:' + ip.address() + ":" + config.webPort);
+  debug_log('http:  listening on:' + localAddress() + ":" + config.webPort);
   if (jogWindow) {
     jogWindow.loadURL(`http://localhost:${config.webPort}/`);
   }
@@ -174,7 +174,7 @@ const {
 
 // telnet
 const net = require('net');
-var ip = require("ip");
+var { localAddress } = require("./dist/server/local-address.js");
 const Evilscan = require('evilscan');
 
 var md5 = require('md5');
@@ -185,6 +185,26 @@ var lastsentuploadprogress = 0;
 // Electron app
 const electron = require('electron');
 const electronApp = electron.app;
+
+// Keep the existing profile even though the visible product name is now CBC.
+const profilePath = electronApp.commandLine.hasSwitch('user-data-dir')
+  ? electronApp.getPath('userData')
+  : path.join(electronApp.getPath('appData'), 'OpenBuildsCONTROL');
+fs.mkdirSync(profilePath, { recursive: true });
+electronApp.setPath('userData', profilePath);
+electronApp.setPath('sessionData', profilePath);
+electronApp.setName('CBC');
+
+// Only the development launcher supplies both this flag and a private IPC channel.
+if (!electronApp.isPackaged && process.env.CONTROL_DEV_RELOAD === '1' && process.send) {
+  process.on('message', function(message) {
+    if (message && message.type === 'control:reload' && jogWindow && !jogWindow.isDestroyed()) {
+      jogWindow.webContents.reloadIgnoringCache();
+    } else if (message && message.type === 'control:quit') {
+      electronApp.quit();
+    }
+  });
+}
 
 electronApp.setAppUserModelId("openbuilds.control")
 
@@ -208,86 +228,8 @@ var forceQuit
 var appIcon = null,
   jogWindow = null,
   mainWindow = null
-var autoUpdater
-
-
-var updateIsDownloading = false;
-if (isElectron()) {
-  autoUpdater = require("electron-updater").autoUpdater
-  var availversion = '0.0.0'
-
-  autoUpdater.on('checking-for-update', () => {
-    var string = 'Starting update... Please wait';
-    var output = {
-      'command': 'autoupdate',
-      'response': string
-    }
-    io.sockets.emit('updatedata', output);
-  })
-  autoUpdater.on('update-available', (ev, info) => {
-    updateIsDownloading = true;
-    var string = "Starting Download: v" + ev.version;
-    availversion = ev.version
-    var output = {
-      'command': 'autoupdate',
-      'response': string
-    }
-    io.sockets.emit('updatedata', output);
-    debug_log(JSON.stringify(ev))
-  })
-  autoUpdater.on('update-not-available', (ev, info) => {
-    var string = 'Update not available. Installed version: ' + require('./package').version + " / Available version: " + ev.version + ".\n";
-    if (require('./package').version === ev.version) {
-      string += "You are already running the latest version!"
-    }
-    var output = {
-      'command': 'autoupdate',
-      'response': string
-    }
-    io.sockets.emit('updatedata', output);
-    debug_log(JSON.stringify(ev))
-  })
-  autoUpdater.on('error', (ev, err) => {
-    if (err) {
-      var string = 'Error in auto-updater: \n' + err.split('SyntaxError')[0];
-    } else {
-      var string = 'Error in auto-updater';
-    }
-    var output = {
-      'command': 'autoupdate',
-      'response': string
-    }
-    io.sockets.emit('updatedata', output);
-  })
-  autoUpdater.on('download-progress', (ev, progressObj) => {
-    updateIsDownloading = true;
-    var string = 'Download update ... ' + ev.percent.toFixed(1) + '%';
-    debug_log(string)
-    var output = {
-      'command': 'autoupdate',
-      'response': string
-    }
-    io.sockets.emit('updatedata', output);
-    io.sockets.emit('updateprogress', ev.percent.toFixed(0));
-  })
-
-  autoUpdater.on('update-downloaded', (info) => {
-    var string = "New update ready";
-    var output = {
-      'command': 'autoupdate',
-      'response': string
-    }
-    io.sockets.emit('updatedata', output);
-    io.sockets.emit('updateready', availversion);
-    // repeat every minute
-    setTimeout(function() {
-      io.sockets.emit('updateready', availversion);
-    }, 1000 * 60 * 60 * 8) // 8hrs before alerting again if it was snoozed
-    updateIsDownloading = false;
-  });
-} else {
-  debug_log("Running outside Electron: Disabled AutoUpdater")
-}
+// CBC automatic updates are not configured. Do not load an updater or an
+// inherited feed; project-owned release infrastructure must be established first.
 
 if (isElectron()) {
   var uploadsDir = electronApp.getPath('userData') + '/upload/';
@@ -411,7 +353,7 @@ var status = {
   login: false,
   driver: {
     version: require('./package').version,
-    ipaddress: ip.address(),
+    ipaddress: localAddress(),
     operatingsystem: false,
     powersettings: {
       usbselectiveAC: null,
@@ -553,7 +495,7 @@ app.get('/api/version', (req, res) => {
   data = {
     "application": "OMD",
     "version": require('./package').version,
-    "ipaddress": ip.address() + ":" + config.webPort
+    "ipaddress": localAddress() + ":" + config.webPort
   }
   res.send(JSON.stringify(data), null, 2);
 })
@@ -562,7 +504,7 @@ app.get('/activate', (req, res) => {
   debug_log(req.hostname)
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  res.send('Host: ' + req.hostname + ' asked to activate OpenBuilds CONTROL v' + require('./package').version);
+  res.send('Host: ' + req.hostname + ' asked to activate CBC v' + require('./package').version);
   showJogWindow()
   setTimeout(function() {
     io.sockets.emit('activate', req.hostname);
@@ -809,7 +751,7 @@ io.on("connection", function(socket) {
       center: true,
       resizable: true,
       maximizable: true,
-      title: "OpenBuilds CONTROL: Chromium's GPU Report",
+      title: "CBC: Chromium's GPU Report",
       frame: true,
       autoHideMenuBar: true,
       //icon: '/app/favicon.png',
@@ -866,19 +808,15 @@ io.on("connection", function(socket) {
     electronApp.exit(0);
   });
 
-  socket.on("applyUpdate", function(data) {
-    autoUpdater.quitAndInstall();
-  })
-
-  socket.on("downloadUpdate", function(data) {
-    if (!updateIsDownloading) {
-      if (typeof autoUpdater !== 'undefined') {
-        autoUpdater.checkForUpdates();
-      } else {
-        debug_log("autoUpdater not found")
-      }
-    }
-  })
+  // Retain old client event names, but never check, download or install updates.
+  function updatesUnavailable() {
+    socket.emit('updatedata', {
+      command: 'autoupdate',
+      response: 'CBC automatic updates are not configured.'
+    });
+  }
+  socket.on("applyUpdate", updatesUnavailable);
+  socket.on("downloadUpdate", updatesUnavailable);
 
   socket.on("flashGrbl", function(data) {
 
@@ -1126,6 +1064,9 @@ io.on("connection", function(socket) {
         console.log("connect", "Connecting to " + data.ip + " via " + data.type);
         port = net.connect(23, data.ip);
         port.isOpen = true;
+      } else if (data.type == "dev") {
+        const { DevController } = require('./dist/machine/dev-controller.js');
+        port = new DevController();
       }
 
       const parser = port.pipe(new ReadlineParser({
@@ -1560,6 +1501,33 @@ io.on("connection", function(socket) {
             }
           }
         }); // end of parser.on(data)
+
+        if (data.type == "dev") {
+          status.comms.connectionStatus = 2;
+          status.comms.runStatus = "Idle";
+          status.comms.blocked = false;
+          status.comms.paused = false;
+          status.comms.alarm = "";
+          status.comms.interfaces.type = "dev";
+          status.comms.interfaces.activePort = "Dev Controller";
+          status.comms.interfaces.activeBaud = false;
+          status.machine.name = "Dev Controller";
+          status.machine.has4thAxis = false;
+          status.machine.firmware.type = "grbl";
+          status.machine.firmware.platform = "gnea";
+          status.machine.firmware.version = "1.1h";
+          status.machine.firmware.features = [];
+          status.machine.firmware.blockBufferSize = 15;
+          status.machine.firmware.rxBufferSize = 128;
+          status.machine.modals.homedRecently = false;
+          addQRealtime("?");
+          clearInterval(statusLoop);
+          statusLoop = setInterval(function() { addQRealtime("?"); }, 200);
+          io.sockets.emit('data', { command: 'connect', response: 'Dev Controller connected (simulated). Commands are ignored; motion, probing and settings are not simulated.', type: 'info' });
+          io.sockets.emit('status', status);
+          io.sockets.emit('grbl', status.machine.firmware);
+          return;
+        }
 
         // Then try to connect
         // set status
@@ -2376,6 +2344,8 @@ function stopPort() {
       port.destroy();
       port.isOpen = false;
     }
+  } else if (status.comms.interfaces.type == "dev") {
+    port.destroy();
   }
 }
 
@@ -2551,7 +2521,7 @@ function parseFeedback(data) {
         pause();
         var output = {
           'command': '[external from hardware]',
-          'response': "OpenBuilds CONTROL received a FEEDHOLD notification from Grbl: This could be due to someone pressing the HOLD button (if connected)",
+          'response': "CBC received a FEEDHOLD notification from Grbl: This could be due to someone pressing the HOLD button (if connected)",
           'type': 'info'
         }
         io.sockets.emit('data', output);
@@ -2567,7 +2537,7 @@ function parseFeedback(data) {
         stop(true);
         var output = {
           'command': '[external from hardware]',
-          'response': "OpenBuilds CONTROL received a RESET/ABORT notification from Grbl: This could be due to someone pressing the RESET/ABORT button (if connected)",
+          'response': "CBC received a RESET/ABORT notification from Grbl: This could be due to someone pressing the RESET/ABORT button (if connected)",
           'type': 'info'
         }
         io.sockets.emit('data', output);
@@ -2578,7 +2548,7 @@ function parseFeedback(data) {
         unpause();
         var output = {
           'command': '[external from hardware]',
-          'response': "OpenBuilds CONTROL received a CYCLESTART/RESUME notification from Grbl: This could be due to someone pressing the CYCLESTART/RESUME button (if connected)",
+          'response': "CBC received a CYCLESTART/RESUME notification from Grbl: This could be due to someone pressing the CYCLESTART/RESUME button (if connected)",
           'type': 'info'
         }
         io.sockets.emit('data', output);
@@ -3101,7 +3071,7 @@ if (isElectron()) {
             showJogWindow()
           }
         }, {
-          label: 'Quit OpenBuilds CONTROL (Disables all integration until started again)',
+          label: 'Quit CBC (Disables all integration until started again)',
           click() {
             if (appIcon) {
               appIcon.destroy();
@@ -3131,14 +3101,13 @@ if (isElectron()) {
         if (appIcon) {
           appIcon.displayBalloon({
             icon: nativeImage.createFromPath(iconPath),
-            title: "OpenBuilds CONTROL Started",
-            // content: "OpenBuilds CONTROL has started successfully: Active on " + ip.address() + ":" + config.webPort
-            content: "OpenBuilds CONTROL has started successfully"
+            title: "CBC Started",
+            content: "CBC has started successfully"
           })
         }
       } else {
         const dockMenu = Menu.buildFromTemplate([{
-          label: 'Quit OpenBuilds CONTROL (Disables all integration until started again)',
+          label: 'Quit CBC (Disables all integration until started again)',
           click() {
             // appIcon.destroy();
             electronApp.exit(0);
@@ -3161,8 +3130,8 @@ if (isElectron()) {
         center: true,
         resizable: true,
         maximizable: true,
-        title: "OpenBuilds CONTROL ",
-        frame: false,
+        title: "CBC",
+        frame: true,
         autoHideMenuBar: true,
         //icon: '/app/favicon.png',
         icon: nativeImage.createFromPath(
@@ -3180,15 +3149,15 @@ if (isElectron()) {
       });
 
       jogWindow.setOverlayIcon(nativeImage.createFromPath(iconPath), 'Icon');
-      var ipaddr = ip.address();
+      var ipaddr = localAddress();
       // jogWindow.loadURL(`//` + ipaddr + `:3000/`)
       jogWindow.loadURL(`http://localhost:${config.webPort}/`);
       //jogWindow.webContents.openDevTools()
 
       jogWindow.on('close', function(event) {
         if (!forceQuit) {
+          event.preventDefault();
           jogWindow.hide();
-          return false;
         }
       });
 
@@ -3752,7 +3721,7 @@ function flashGrblHal(data) {
 
 // LAN Scanner for BlackBox X32, Interface, SwitchBlox etc //
 function scanForTelnetDevices(range) {
-  //var localNetwork = ip.address().split('.');
+  //var localNetwork = localAddress().split('.');
   //var network = localNetwork[0] + '.' + localNetwork[1] + '.' + localNetwork[2];
   //var range = network + ".1-" + network + ".254"
 

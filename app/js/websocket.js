@@ -134,7 +134,7 @@ function initSocket() {
     console.log("WEBSOCKET DISCONNECTED")
     var icon = ''
     var source = "websocket"
-    var string = "Disconnected.  OpenBuilds CONTROL probably quit or crashed"
+    var string = "Disconnected.  CBC probably quit or crashed"
     var printLogCls = "fg-darkRed"
     printLogModern(icon, source, string, printLogCls)
     $("#websocketstatus").html("Disconnected")
@@ -207,27 +207,6 @@ function initSocket() {
     var string = data.response
     var printLogCls = "fg-darkGreen"
     printLogModern(icon, source, string, printLogCls)
-  });
-
-  socket.on('updateready', function(data) {
-    // 0 = not connected
-    // 1 = Connected, but not Playing yet
-    // 2 = Connected, but not Playing yet
-    // 3 = Busy Streaming GCODE
-    // 4 = Paused
-    // 5 = Alarm State
-    // 6 = Firmware Upgrade State
-    if (laststatus.comms.connectionStatus < 3 && !continuousJogRunning) {
-      $('#availVersion').html(data)
-      getReleaseStats()
-      getChangelog();
-      Metro.dialog.open('#downloadUpdate')
-    }
-
-  });
-
-  socket.on('updateprogress', function(data) {
-    $('#downloadprogress').html(data + "%");
   });
 
   socket.on('fluidncConfig', function(data) {
@@ -585,11 +564,7 @@ function initSocket() {
   socket.on('status', function(status) {
 
     if (nostatusyet) {
-      // $('#windowtitle').html("OpenBuilds CONTROL v" + status.driver.version)
       setWindowTitle(status)
-      if (status.driver.operatingsystem == "rpi") {
-        $('#windowtitlebar').hide();
-      }
     }
     nostatusyet = false;
 
@@ -1090,6 +1065,10 @@ function selectPort(port) {
   if (port == undefined) {
     port = $("#portUSB").val()
   }
+  if (port == "Dev Controller") {
+    socket.emit('connectTo', { type: 'dev' });
+    return;
+  }
   if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(port)) {
     var data = {
       ip: port,
@@ -1199,6 +1178,7 @@ function populatePortsMenu() {
     }
     response += `</optgroup>`
     var select = $("#portUSB").data("select");
+    response += `<optgroup label="Development"><option value="Dev Controller">Dev Controller (simulated)</option></optgroup>`;
     select.data(response);
 
     $('#portUSB').parent(".select").removeClass('disabled')

@@ -11,88 +11,16 @@ document.addEventListener("contextmenu", function(e) {
 
 function setWindowTitle(status) {
 
-  var string = ""
-
-  if (status) {
-    string += " v" + status.driver.version
-  } else if (laststatus) {
-    string += " v" + laststatus.driver.version
-  }
-
-
-  if (loadedFileName.length > 0) {
-    string += " / " + loadedFileName
-  }
-
-  if (!nostatusyet && laststatus.comms.interfaces.activePort) {
-    string += " / connected to " + laststatus.comms.interfaces.activePort
-  }
-
-  $('#windowtitle').html(string)
-  document.title = "OpenBuilds CONTROL" + string
-
-}
-
-
-function getReleaseStats() {
-  var url = "https://api.github.com/repos/OpenBuilds/OpenBuilds-CONTROL/releases/latest";
-  $.getJSON(url, function(data) {
-    console.log(data)
-    var assets = data.assets;
-    var downloadCount = 0
-    for (i = 0; i < assets.length; i++) {
-      if (assets[i].name.indexOf("exe") != -1) {
-        downloadCount = downloadCount + assets[i].download_count;
-      }
-      if (assets[i].name.indexOf("dmg") != -1) {
-        downloadCount = downloadCount + assets[i].download_count;
-      }
-      if (assets[i].name.indexOf("zip") != -1) {
-        downloadCount = downloadCount + assets[i].download_count;
-      }
-      if (assets[i].name.indexOf("AppImage") != -1) {
-        downloadCount = downloadCount + assets[i].download_count;
-      }
-    }
-    console.log("Latest version has already been installed " + downloadCount + " times")
-    $("#releaseStats").html(downloadCount)
-    $("#releaseDate").html(data.published_at.split("T")[0])
+  var title = window.CBCWindowTitle({
+    version: (status || laststatus) ? (status || laststatus).driver.version : undefined,
+    filename: loadedFileName,
+    activePort: !nostatusyet ? laststatus.comms.interfaces.activePort : undefined
   });
+  $('#windowtitle').html(title.detail)
+  document.title = title.title
 
 }
 
-
-function getChangelog() {
-
-  // Splash Screen Begin
-
-  $("#changelog").empty()
-  var template2 = `<ul>`
-  $.get("https://raw.githubusercontent.com/OpenBuilds/OpenBuilds-CONTROL/master/CHANGELOG.txt?date=" + new Date().getTime(), function(data) {
-    var lines = data.split('\n');
-    if (lines.length < 12) {
-      var count = lines.length - 1
-    } else {
-      var count = 12
-    }
-    for (var line = 0; line < count - 1; line++) {
-      template2 += '<li>' + lines[line] + '</li>'
-    }
-    template2 += `</ul>`
-    $("#changelog").html(template2);
-
-    // Update Dialog
-    var template3 = `<h6>Changelog:</h6> <hr> <ul>`
-    for (var line = 0; line < 5; line++) {
-      template3 += '<li>' + lines[line] + '</li>'
-    }
-    template3 += `</ul>`
-
-    $("#changelogupdate").html(template3);
-
-
-  });
-}
 
 $(document).ready(function() {
 
@@ -188,8 +116,6 @@ $(document).ready(function() {
 
   });
 
-  getChangelog()
-
   setInterval(function() {
     setWindowTitle();
   }, 1000)
@@ -200,7 +126,7 @@ $(document).ready(function() {
       /* Call callback function here */
       socket.emit("maximize", true)
       console.log("%c                        ", "background-image: url('https://openbuilds.com/styles/uix/uix/OpenBuildsHeader_logo.png'); font-size: 41px; background-repeat: no-repeat; background-size: 183px 41px; ");
-      console.log('%cOpenBuilds CONTROL Devtools', 'font-weight: bold; font-size: 20px;color: rgb(50,80,188); text-shadow: 1px 1px 0 rgb(0,00,39)');
+      console.log('%cCBC Devtools', 'font-weight: bold; font-size: 20px;color: rgb(50,80,188); text-shadow: 1px 1px 0 rgb(0,00,39)');
       console.log('%c', 'font-weight: bold; font-size: 12px;color: black; ');
       console.log('%cGeneral: Check for any errors, messages as requested by our support team', 'font-weight: bold; font-size: 12px;color: black; ');
       console.log('%c', 'font-weight: bold; font-size: 12px;color: black; ');

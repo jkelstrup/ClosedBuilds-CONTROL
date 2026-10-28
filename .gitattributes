@@ -1,0 +1,10 @@
+# Prettier checks LF; preserve it even with Windows core.autocrlf=true.
+# Keep legacy source, vendor assets and binary resources outside this policy.
+/scripts/** text eol=lf
+/src/** text eol=lf
+/tests/** text eol=lf
+/.github/workflows/** text eol=lf
+/*.ts text eol=lf
+/*.mts text eol=lf
+/*.mjs text eol=lf
+/*.json text eol=lf

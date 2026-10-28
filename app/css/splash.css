@@ -16,7 +16,10 @@
 }
 
 #openbuildslogosplash img {
-  width: 500px;
-  max-width: 100%;
+  width: 256px;
+  height: auto;
+  max-width: calc(100vw - 48px);
+  max-height: 60vh;
+  object-fit: contain;
   /* Ensure it scales on smaller screens */
 }

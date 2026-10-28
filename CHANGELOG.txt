@@ -1,3 +1,10 @@
+v0.1.0 (unreleased)
+- Renamed the app to CBC and added the CBC splash logo, retaining existing settings and storage.
+- Replaced the custom title bar with native OS window controls, preserving close-to-tray behavior.
+- Removed the Visit OpenBuilds button beside the connection controls.
+- Added automatic frontend reloads and Electron restarts for development with npm run dev.
+- Disabled inherited OpenBuilds application updates and remote release/changelog checks; CBC automatic updates are not configured.
+
 v1.0.390
 - Removed mailling list signup form to allow access to CONTROL
 - Lowered update check frequency

@@ -1,8 +1,8 @@
-var ip = require("ip");
+var { localAddress } = require("./dist/server/local-address.js");
 const net = require('net');
 const Evilscan = require('evilscan');
 
-var localNetwork = ip.address().split('.');
+var localNetwork = localAddress().split('.');
 var network = localNetwork[0] + '.' + localNetwork[1] + '.' + localNetwork[2];
 var range = network + ".1-" + network + ".254"
 

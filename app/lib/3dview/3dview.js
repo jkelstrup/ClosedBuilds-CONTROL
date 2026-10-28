@@ -80,7 +80,7 @@ function parseGcodeInWebWorker(gcode) {
       object = false;
 
       // var worker = new Worker('lib/3dview/workers/gcodeparser.js');
-      var worker = new Worker('lib/3dview/workers/verylitegcodeviewer.js');
+      var worker = new Worker('/generated/preview-worker.js');
       worker.addEventListener('message', function(e) {
         // console.log('webworker message', e)
         if (e.data.progress != undefined) {
