@@ -142,6 +142,15 @@ Evidence on `build/remove-ip-dependency`, macOS arm64 (Darwin 27), Node 24.22.1/
 - `npm run package` and `npm run verify:package` pass for the unsigned macOS arm64 directory artifact, including byte verification of the new compiled module and absence of `ip`. Signing is explicitly skipped. The artifact was not launched.
 - Gaps: no new source/package startup, live LAN/default-route selection, Interface download, actual network scan, other-platform runtime, hosted CI, installer, full workflow or hardware evidence. Browser tests were not rerun because browser assets are unchanged. Inherited TLS material, renderer/network security and release ownership/migration remain unresolved. Milestone 2 remains open.
 
+### First hosted platform verification (milestone 2)
+
+Evidence for commit `07a12383fee5a831c8106bf2917b0453fb1bfa23` on `build/hosted-platform-verification`: [verification run 40774979884](https://github.com/jkelstrup/ClosedBuilds-CONTROL/actions/runs/40774979884), triggered by draft PR #1. All runners selected the pinned Node 24.22.1/npm 11.19.1 toolchain.
+
+- `ubuntu-24.04` and `macos-15` passed locked installation, dependency-tree validation, `npm run check` (51 tests), native loading in host Node/Electron, unsigned host packaging and resource inspection. Linux also passed the three isolated Chromium checks; macOS browser checks are intentionally skipped by this workflow.
+- `windows-2025` passed installation and dependency-tree validation, then failed `format:check` on 44 files. Tests, native verification and packaging were not reached. A local reproduction using `core.autocrlf=true` in a disposable Git repository confirmed that checkout converted formatting-checked files to CRLF, which Prettier rejects.
+- The working-branch fix adds scoped LF checkout rules in `.gitattributes`, leaving legacy source/vendor/binary resources outside the policy. `tests/toolchain/checkout.test.ts` exercises an actual Git checkout with Windows-style conversion enabled: it failed before the rules and passes afterward. Local `npm run check` passes 52 tests on macOS arm64. Hosted verification of this fix remains pending publication and rerun.
+- These jobs never launch the application or access controllers. Hosted package/resource checks are not Windows/Linux desktop startup evidence, a supported-platform decision, installed/signed release verification, or hardware evidence. CI failure propagation is now observed; milestone 2 remains open.
+
 ## CBC 0.1.0 development checks
 
 Evidence recorded with the CBC 0.1.0 changes, macOS arm64, Node 24.22.1/npm 11.19.1, Electron 23.3.13, no controllers. User-facing changes are listed in [CHANGELOG.txt](../CHANGELOG.txt); watcher usage and storage compatibility are documented in [development.md](development.md).
