@@ -155,6 +155,14 @@ Evidence for commit `07a12383fee5a831c8106bf2917b0453fb1bfa23` on `build/hosted-
 - Non-blocking runner annotations warn that checkout/setup-node v4 target deprecated Node 20 and are forced onto Node 24; action-version modernization remains follow-up work, not a failure of the pinned application/tooling runtime. macOS also reported runner capacity constraints.
 - These jobs never launch the application or access controllers. Hosted package/resource checks are not Windows/Linux desktop startup evidence, a supported-platform decision, installed/signed release verification, or hardware evidence. CI failure propagation is now observed; milestone 2 remains open.
 
+### Verification action runtime modernization (milestone 2)
+
+Evidence on `build/modernize-verification-actions`, macOS arm64, Node 24.22.1/npm 11.19.1. No application startup, controller access, CI dispatch or publishing:
+
+- Replaced checkout/setup-node v4 with [checkout 7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1) and [setup-node 7.1.0](https://github.com/actions/setup-node/releases/tag/v7.1.0), pinned to release commits `3d3c42e5aac5ba805825da76410c181273ba90b1` and `949feb2413d6458794dcd2491c4babbbce0c15c1`. GitHub's tag-ref API resolves both tags directly to these commits; both release `action.yml` files declare `node24` and retain the inputs used by this workflow. Checkout's new fork-checkout restriction concerns privileged `pull_request_target`/`workflow_run` triggers, neither of which CBC uses. No unsafe override is enabled.
+- `npm run check` passes formatting (including workflow YAML), lint, strict types, all **53 tests**, and builds. No dependencies, lockfile, application runtime, runner targets or verification commands changed; read-only permissions, disabled credential persistence and the explicit npm cache remain intact.
+- Hosted execution of these new action versions, cache restore/save and removal of the prior Node 20 annotations remain **unverified**. The earlier green three-platform run used v4; local checks cannot establish GitHub runner compatibility. No package/startup or hardware evidence is added by this change. Milestone 2 remains open for platform startup/support and release-ownership gaps.
+
 ## CBC 0.1.0 development checks
 
 Evidence recorded with the CBC 0.1.0 changes, macOS arm64, Node 24.22.1/npm 11.19.1, Electron 23.3.13, no controllers. User-facing changes are listed in [CHANGELOG.txt](../CHANGELOG.txt); watcher usage and storage compatibility are documented in [development.md](development.md).
