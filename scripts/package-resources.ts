@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile, readdir, access } from 'node:fs/promises';
-import { join, dirname, sep } from 'node:path';
+import { join, dirname, normalize, sep } from 'node:path';
 import { extractFile, listPackage, statFile } from '@electron/asar';
 import { globSync } from 'node:fs';
 
@@ -96,12 +96,16 @@ export async function verifyPackageResources(
       /\.(bin|hex)$/.test(name) || /^esptool(?:-linux|-mac|\.exe)$/.test(name),
   );
   for (const file of [...requiredFiles, ...rootResources]) {
+    // ASAR's reader splits directories on path.sep, unlike Node filesystem APIs.
+    const archivePath = normalize(file);
     assert(
-      extractFile(archive, file).equals(await readFile(join(root, file))),
+      extractFile(archive, archivePath).equals(
+        await readFile(join(root, file)),
+      ),
       `Missing or stale packaged resource: ${file}`,
     );
     if (file.endsWith('.bin') || file.startsWith('esptool')) {
-      const entry = statFile(archive, file);
+      const entry = statFile(archive, archivePath);
       assert(
         'unpacked' in entry && entry.unpacked,
         `Resource must be outside ASAR: ${file}`,
@@ -115,7 +119,9 @@ export async function verifyPackageResources(
     )) {
       const file = `app/wizards/interface/${directory}/${name}`;
       assert(
-        extractFile(archive, file).equals(await readFile(join(root, file))),
+        extractFile(archive, normalize(file)).equals(
+          await readFile(join(root, file)),
+        ),
         `Missing or stale Interface resource: ${file}`,
       );
     }
@@ -127,7 +133,7 @@ export async function verifyPackageResources(
     'Native serial binding missing',
   );
   for (const entry of entries.filter((entry) => entry.endsWith('.node'))) {
-    const stat = statFile(archive, entry.slice(1));
+    const stat = statFile(archive, normalize(entry.slice(1)));
     assert(
       'unpacked' in stat && stat.unpacked,
       `Native binding not unpacked: ${entry}`,
