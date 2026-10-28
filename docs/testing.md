@@ -97,6 +97,18 @@ Evidence on `build/modernize-electron`, macOS arm64 (Darwin 27), Node 24.22.1/np
 
 Selection reference: [official Electron breaking changes](https://www.electronjs.org/docs/latest/breaking-changes), including Electron 42's explicit binary installer and Electron 44's platform removals. The current startup path has no preload, renderer clipboard calls, or Electron `File.path` dependency requiring migration in this slice; broader feature compatibility remains unverified.
 
+### Packaging toolchain modernization (milestone 2)
+
+Evidence on `build/modernize-packaging-toolchain`, macOS arm64 (Darwin 27), Node 24.22.1/npm 11.19.1, Electron 45.1.0, electron-builder 26.18.0. The maintainer authorized stopping the running dev session, then explicitly confirmed disconnected controllers and a trusted isolated network before desktop checks. The application is left stopped; no machine commands were sent.
+
+- `npm ci`, `npm ls --depth=0`, and `npm run verify:install` pass. Builder now uses `@electron/rebuild` 4.2.1 with node-gyp 12.4.0/tar 7.5.22 from the lockfile. Serialport 12.0.0/native bindings 12.0.1 load in host Node and Electron's Node mode without opening or enumerating devices. This is not native source compilation evidence.
+- Reference inspection (`git grep` across tracked files) found no maintained runtime/build consumers for the removed direct `electron-rebuild`, `node-gyp`, `node-abi` or `electron-builder-notarize` dependencies. The historical Pi installer independently installs its legacy rebuild helper; it remains unverified and was not run. The retained notarize hook still imports its declared direct dependency; removing the global override allows builder to use its own notarize 2.5.0.
+- `npm run check` passes 42 tests and strict checks/builds, including compatibility with the installed builder configuration types and assertions for the migrated unsigned Windows `signtoolOptions.sign` policy. No signing credentials or release setup are needed.
+- `npm run package` and `npm run verify:package` pass for the macOS arm64 unsigned directory artifact. Actual builder schema validation passes; signing is explicitly skipped. Resources, generated assets, the Dev Controller module, firmware/tools and native unpacking pass inspection with the new builder's dependency collection/ASAR implementation.
+- `CBC_DESKTOP_SMOKE=1 npm run test:desktop` and `CBC_DESKTOP_SMOKE=1 CBC_PACKAGED_EXECUTABLE="$PWD/dist/unsigned/mac-arm64/CBC.app/Contents/MacOS/CBC" npm run test:desktop` both pass. Source and newly packaged runtime match Electron 45.1.0, isolate their profiles, report disconnected status, serve assets/worker output, dismiss the splash and release ports on close.
+- `npm audit` exits 1 with **three high affected packages**, down from 14 (13 high/1 critical): `electron-updater`, its nested `builder-util-runtime`, and `ip`. No forced fixes or updater behavior changes were applied; this remains a non-distributable verification artifact with inherited TLS/security debt.
+- Gaps: no hosted CI results, Windows/Linux/x64 packaging/runtime, native compilation, installers, signing/publishing, persisted-data migration, full desktop workflows, or hardware evidence. The retained legacy release config was not migrated to builder 26 and is not an authorized or validated release path. Milestone 2 remains open.
+
 ## CBC 0.1.0 development checks
 
 Evidence recorded with the CBC 0.1.0 changes, macOS arm64, Node 24.22.1/npm 11.19.1, Electron 23.3.13, no controllers. User-facing changes are listed in [CHANGELOG.txt](../CHANGELOG.txt); watcher usage and storage compatibility are documented in [development.md](development.md).

@@ -2,11 +2,16 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { runInNewContext } from 'node:vm';
 import { EventEmitter } from 'node:events';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import type { Configuration } from 'electron-builder';
 import config from '../electron-builder.unsigned.json';
 import { unsignedPackageInvocation } from './unsigned-package.js';
 
 describe('unsigned packaging boundary', () => {
+  it('matches the installed builder configuration types', () => {
+    expectTypeOf(config).toExtend<Configuration>();
+  });
+
   it('selects only the independent config, host directory target and never-publish policy', () => {
     const invocation = unsignedPackageInvocation('.', {});
     expect(invocation.args).toEqual([
@@ -21,7 +26,8 @@ describe('unsigned packaging boundary', () => {
     expect(config.afterSign).toBeNull();
     expect(config.mac.identity).toBeNull();
     expect(config.mac.notarize).toBe(false);
-    expect(config.win.sign).toBeNull();
+    expect(config.win.signtoolOptions.sign).toBeNull();
+    expect(config.win).not.toHaveProperty('sign');
     expect(config.win.signAndEditExecutable).toBe(false);
     expect(config.forceCodeSigning).toBe(false);
     expect(config.extraMetadata.cbcUnsignedVerification).toBe(true);

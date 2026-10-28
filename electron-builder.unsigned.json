@@ -39,7 +39,7 @@
     "category": "public.app-category.graphics-design"
   },
   "win": {
-    "sign": null,
+    "signtoolOptions": { "sign": null },
     "signAndEditExecutable": false,
     "icon": "build/icon.ico"
   },
