@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path';
 import { createServer } from 'node:net';
 import { expect, test, type ElectronApplication } from '@playwright/test';
 import manifest from '../../package.json';
+import { findPackagedExecutable } from '../../scripts/desktop-smoke.js';
 
 async function availablePort(port = 0): Promise<number> {
   const server = createServer();
@@ -28,9 +29,12 @@ test('desktop startup serves generated assets with no controller connection', as
   // with another instance (the disposable profile does not isolate its ports).
   await availablePort(3001);
   const port = await availablePort();
+  const executable =
+    process.env['CBC_PACKAGED_EXECUTABLE'] ||
+    (process.env['CBC_DESKTOP_PACKAGE'] === '1'
+      ? findPackagedExecutable(resolve('dist/unsigned'), process.platform)
+      : undefined);
   const profile = await mkdtemp(join(tmpdir(), 'cbc-desktop-smoke-'));
-  await mkdir(join(profile, 'upload'));
-  const executable = process.env['CBC_PACKAGED_EXECUTABLE'];
   const env = Object.fromEntries(
     Object.entries(process.env).filter(
       (entry): entry is [string, string] => typeof entry[1] === 'string',
@@ -40,6 +44,7 @@ test('desktop startup serves generated assets with no controller connection', as
   env['WEB_PORT'] = String(port);
   let application: ElectronApplication | undefined;
   try {
+    await mkdir(join(profile, 'upload'));
     application = await playwright._electron.launch({
       ...(executable ? { executablePath: resolve(executable) } : {}),
       cwd: process.cwd(),
@@ -61,6 +66,12 @@ test('desktop startup serves generated assets with no controller connection', as
     expect(runtime.electron).toBe(manifest.devDependencies.electron);
     expect(await realpath(runtime.profile)).toBe(await realpath(profile));
     if (executable) expect(runtime.appPath).toContain('app.asar');
+    // Windows intentionally starts in the tray. Exercise the existing public
+    // activation route instead of changing normal application startup.
+    if (process.platform === 'win32') {
+      const response = await request.get(`http://localhost:${port}/activate`);
+      expect(response.status()).toBe(200);
+    }
     const page = await application.firstWindow();
     await page.waitForURL(`http://localhost:${port}/`);
     await expect(page).toHaveTitle(

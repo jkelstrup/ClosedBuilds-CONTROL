@@ -24,12 +24,12 @@ jobs:
         os: [ubuntu-24.04, macos-15, windows-2025]
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Set up pinned Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -62,3 +62,31 @@ jobs:
 
       - name: Verify packaged resources without application startup
         run: npm run verify:package
+
+      # Hosted runners are disposable and have no physical controllers. Keep
+      # this explicit opt-in separate from checks that never start the app.
+      - name: Check source desktop startup (Linux virtual display)
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum npm run test:desktop
+        env:
+          CBC_DESKTOP_SMOKE: '1'
+
+      - name: Check packaged desktop startup (Linux virtual display)
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum npm run test:desktop
+        env:
+          CBC_DESKTOP_SMOKE: '1'
+          CBC_DESKTOP_PACKAGE: '1'
+
+      - name: Check source desktop startup
+        if: runner.os != 'Linux'
+        run: npm run test:desktop
+        env:
+          CBC_DESKTOP_SMOKE: '1'
+
+      - name: Check packaged desktop startup
+        if: runner.os != 'Linux'
+        run: npm run test:desktop
+        env:
+          CBC_DESKTOP_SMOKE: '1'
+          CBC_DESKTOP_PACKAGE: '1'
